@@ -24,6 +24,9 @@
     <ClCompile Include="tests\linked_list_tests.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="corrector\helpful_functions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linked_list\linked_list.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="corrector\CorrectorModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\helpful_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,8 +7,6 @@
 
 // ¬ случае успешного выполнени€ тестов возвращаем 0
 
-static Linked_list* create_llist_for_test();
-
 int launch_all_tests()
 {
 	setlocale(LC_ALL, "ru");
