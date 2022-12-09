@@ -9,7 +9,6 @@
 int launch_all_tests()
 {
 	setlocale(LC_ALL, "ru");
-	create_destroy_test();
 	
 	printf("Все тесты успешно пройдены\n");
 	return 0;

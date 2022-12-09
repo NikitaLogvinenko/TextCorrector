@@ -129,12 +129,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="corrector\helpful_functions.c" />
     <ClCompile Include="linked_list\ll_lib.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="tests\linked_list_tests.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="corrector\CorrectorModel.h" />
+    <ClInclude Include="corrector\helpful_functions.h" />
     <ClInclude Include="linked_list\linked_list.h" />
     <ClInclude Include="linked_list\ll_lib.h" />
     <ClInclude Include="tests\linked_list_tests.h" />

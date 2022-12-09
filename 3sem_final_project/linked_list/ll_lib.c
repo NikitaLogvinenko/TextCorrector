@@ -1,16 +1,10 @@
 #include "linked_list.h"
 #include "ll_lib.h"
+#include "helpful_functions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <locale.h>
-
-// Проверить, что указатель не нулевой, иначе вывести сообщение error_msg
-static bool not_null_ptr(const Pointer ptr, const char* error_msg);
-
-// Проверить, что данные совпадают
-static bool is_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size);
 
 // Удалить голову, вернуть новую голову
 static Linked_list* remove_head(Linked_list* old_head);
@@ -295,24 +289,6 @@ void llist_foreach(Linked_list* ll,
         func(ll->data);
         ll = ll->next;
     }
-}
-
-static bool not_null_ptr(const Pointer ptr, const char* error_msg)
-{
-    setlocale(LC_ALL, "ru");
-    if (ptr != NULL) return true;
-    if (error_msg != NULL) printf("%s\n", error_msg);
-    return false;
-}
-
-static bool is_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size)
-{
-    if (data1_size != data2_size) return false; // совпадает размер
-    for (int i = 0; i < data1_size; ++i)
-    {
-        if (*((char*)(data1)+i) != *((char*)(data2)+i)) return false; // совпадают i-е байты
-    }
-    return true;
 }
 
 static Linked_list* remove_head(Linked_list* old_head)
