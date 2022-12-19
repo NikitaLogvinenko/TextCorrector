@@ -31,5 +31,7 @@ int remove_all_equal_test();
 
 int remove_first_equal_test();
 
+int trip_to_index_test();
+
 #endif
 

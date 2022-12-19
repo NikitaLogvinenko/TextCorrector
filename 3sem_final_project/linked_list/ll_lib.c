@@ -118,7 +118,7 @@ Linked_list* llist_append(Linked_list* ll, const Pointer data, size_t data_size)
     return ll;
 }
 
-Pointer llist_get(const Linked_list* ll, unsigned index)
+Pointer llist_get(const Linked_list* ll, const unsigned index)
 {
     // Перемещаемся по списку либо необходимое число раз, либо до конца
     for (int cur_index = 0; (cur_index < index) && (ll != NULL); ++cur_index) ll = ll->next;
@@ -148,6 +148,16 @@ Pointer llist_get_last(const Linked_list* ll)
     return returned_data;
 }
 
+Linked_list* llist_trip_to_index(const Linked_list* ll, const unsigned index)
+{
+    // Пустой список
+    if (ll == NULL) return NULL;
+    // Перемещаемся по списку нужное число раз
+    for (int i = 0; (i < index) && (ll != NULL); ++i)
+        ll = ll->next;
+    return ll;
+}
+
 int llist_find(const Linked_list* ll, const Pointer data, size_t data_size)
 {
     // В пустом списке ничего нет
@@ -155,7 +165,7 @@ int llist_find(const Linked_list* ll, const Pointer data, size_t data_size)
     // Поэлементно сравниваем данные в списке с искомым значением
     for (int counter = 0; ll != NULL; ++counter)
     {
-        if (is_equal(ll->data, ll->data_size, data, data_size))
+        if (datas_are_equal(ll->data, ll->data_size, data, data_size))
             return counter;
         ll = ll->next;
     }
@@ -163,14 +173,17 @@ int llist_find(const Linked_list* ll, const Pointer data, size_t data_size)
     return -1;
 }
 
-int llist_find_custom(const Linked_list* ll, bool (*predicate)(const Pointer data), Pointer const custom_data)
+int llist_find_custom(const Linked_list* ll,
+    bool (*predicate)(const Pointer data, const Pointer extra_data),
+    const Pointer extra_data,
+    Pointer const custom_data)
 {
     // В пустом списке ничего нет
     if (ll == NULL) return -1;
     // Поэлементно выполняем проверку условия
     for (int counter = 0; ll != NULL; ++counter)
     {
-        if (predicate(ll->data))
+        if (predicate(ll->data, extra_data))
         {
             if (custom_data != NULL)
                 memcpy(custom_data, ll->data, ll->data_size);
@@ -185,7 +198,7 @@ int llist_find_custom(const Linked_list* ll, bool (*predicate)(const Pointer dat
 Linked_list* llist_remove(Linked_list* ll, unsigned index)
 {
     // Из пустого списка нечего удалять
-    if (not_null_ptr(ll, "Пустой список, удалять нечего\n"))
+    if (!not_null_ptr(ll, "Пустой список, удалять нечего\n"))
         return NULL;
     // Если удаляем голову, то после удаления у списка новая голова
     if (index == 0)
@@ -193,7 +206,7 @@ Linked_list* llist_remove(Linked_list* ll, unsigned index)
         Linked_list* new_head = remove_head(ll);
         return new_head;
     }
-    // Перемещаемся по списку либо отсановившись перед удаляемым элементом, либо до конца
+    // Перемещаемся по списку либо остановившись перед удаляемым элементом, либо до конца
     Linked_list* cur_node = ll;
     for (int i = 0; (i < index - 1) && cur_node->next != NULL; ++i)
         cur_node = cur_node->next;
@@ -212,7 +225,7 @@ Linked_list* llist_remove_first_equal(Linked_list* ll, const Pointer data, size_
     if (ll == NULL)
         return NULL;
     // Проверяем данные в голове списка
-    if (is_equal(ll->data, ll->data_size, data, data_size))
+    if (datas_are_equal(ll->data, ll->data_size, data, data_size))
     {
         Linked_list* new_head = remove_head(ll);
         return new_head;
@@ -222,7 +235,7 @@ Linked_list* llist_remove_first_equal(Linked_list* ll, const Pointer data, size_
     while (cur_node->next != NULL)
     {
         // Удаляем данные один раз при совпадении
-        if (is_equal(cur_node->next->data, cur_node->next->data_size, data, data_size))
+        if (datas_are_equal(cur_node->next->data, cur_node->next->data_size, data, data_size))
         {
             remove_next(cur_node);
             break;
@@ -241,7 +254,7 @@ Linked_list* llist_remove_all_equal(Linked_list* ll, const Pointer data, size_t 
         return NULL;
     // Проверяем данные в голове списка
     Linked_list* new_head = ll;
-    while(is_equal(new_head->data, new_head->data_size, data, data_size))
+    while(datas_are_equal(new_head->data, new_head->data_size, data, data_size))
     {
         new_head = remove_head(new_head);
         if (new_head == NULL)
@@ -252,7 +265,7 @@ Linked_list* llist_remove_all_equal(Linked_list* ll, const Pointer data, size_t 
     while (cur_node->next != NULL)
     {
         // Удаляем данные при совпадении и остаёмся в этом же узле для дальнейшей проверки
-        if (is_equal(cur_node->next->data, cur_node->next->data_size, data, data_size))
+        if (datas_are_equal(cur_node->next->data, cur_node->next->data_size, data, data_size))
         {
             remove_next(cur_node);
             continue;
@@ -276,9 +289,9 @@ Linked_list* llist_concat(Linked_list* ll1, Linked_list* ll2)
     return ll1;
 }
 
-// К данным списка применить функцию foreach_func с дополнительным параметром extra_data
 void llist_foreach(Linked_list* ll,
-    void (*func)(Pointer data))
+    void (*func)(Pointer data, const Pointer extra_data),
+    const Pointer extra_data)
 {
     // Функция не передана, ничего не меняем
     if (func == NULL)
@@ -286,7 +299,7 @@ void llist_foreach(Linked_list* ll,
     // Поэлементно применяем функцию
     while (ll != NULL)
     {
-        func(ll->data);
+        func(ll->data, extra_data);
         ll = ll->next;
     }
 }

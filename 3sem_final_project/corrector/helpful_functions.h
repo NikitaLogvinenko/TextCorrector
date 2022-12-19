@@ -6,10 +6,16 @@
 
 typedef void* Pointer;
 
-// Проверить, что указатель не нулевой, иначе вывести сообщение error_msg
+// Проверяет, что указатель не нулевой. Если нулевой - вывести сообщение об ошибке error_msg (не открылся файл, не выделилась память и тд)
 bool not_null_ptr(const Pointer ptr, const char* error_msg);
 
-// Проверить, что данные совпадают
-bool is_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size);
+// Проверяет, что данные по указателям побайтово совпадают (с учётом размеров данных)
+bool datas_are_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size);
+
+// Проверка, что два числа равны
+bool ints_are_equal(int* number_1, int* number_2);
+
+// умножить data на multiplier
+void multiply_int(int* data, const int* multiplier);
 
 #endif

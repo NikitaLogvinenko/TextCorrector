@@ -5,7 +5,6 @@
 #include <string.h>
 
 
-// Проверяет, что указатель не нулевой. Если нулевой - вывести сообщение об ошибке error_msg (не открылся файл, не выделилась память и тд)
 bool not_null_ptr(const Pointer ptr, const char* error_msg)
 {
     setlocale(LC_ALL, "ru");
@@ -15,8 +14,7 @@ bool not_null_ptr(const Pointer ptr, const char* error_msg)
     return false;
 }
 
-// Проверяет, что данные по указателям побайтово совпадают
-bool is_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size)
+bool datas_are_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size)
 {
     if (data1_size != data2_size) return false; // не совпадает размер данных
 
@@ -25,4 +23,14 @@ bool is_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_
     bool data_is_equal = (bool)(strncmp(char_ptr1, char_ptr2, data1_size) == 0);  // побайтовое сравнение
 
     return data_is_equal;
+}
+
+bool ints_are_equal(int* number_1, int* number_2)
+{
+    return *number_1 == *number_2;
+}
+
+void multiply_int(int* data, const int* multiplier)
+{
+    *data *= *multiplier;
 }
