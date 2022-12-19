@@ -4,6 +4,10 @@
 typedef void* Pointer;
 typedef void (*Destructor)(Pointer);
 
+/*
+Редактирующая модель.
+Хранит максимальную длину слова, параметры редактирования(treshold, tol), массив связных списков(каждый список - слова определённой длины), функцию очистки списков
+*/
 typedef struct Corrector
 {
 	int max_word_size;
