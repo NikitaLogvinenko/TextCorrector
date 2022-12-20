@@ -1,37 +1,37 @@
 #ifndef _LINKED_LIST_TESTS_
 #define _LINKED_LIST_TESTS_
 
-int launch_all_tests();
+int llist_launch_all_tests();
 
-int create_destroy_test();
+int llist_create_destroy_test();
 
-int append_test();
+int llist_append_test();
 
-int prepend_test();
+int llist_prepend_test();
 
-int concat_test();
+int llist_concat_test();
 
-int copy_test();
+int llist_copy_test();
 
-int find_test();
+int llist_find_test();
 
-int find_custom_test();
+int llist_find_custom_test();
 
-int foreach_test();
+int llist_foreach_test();
 
-int get_test();
+int llist_get_test();
 
-int get_last_test();
+int llist_get_last_test();
 
-int length_test();
+int llist_length_test();
 
-int remove_test();
+int llist_remove_test();
 
-int remove_all_equal_test();
+int llist_remove_all_equal_test();
 
-int remove_first_equal_test();
+int llist_remove_first_equal_test();
 
-int trip_to_index_test();
+int llist_trip_to_index_test();
 
 #endif
 

@@ -27,6 +27,15 @@
     <ClCompile Include="corrector\helpful_functions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tests\help_func_tests.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="corrector\train_module.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="corrector\edit_module.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="linked_list\linked_list.h">
@@ -42,6 +51,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="corrector\helpful_functions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\help_func_tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\train_module.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\edit_module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -15,35 +15,35 @@ static Linked_list* create_llist_for_test(unsigned int range);
 
 
 // В случае успешного выполнения тестов возвращаем 0
-int launch_all_tests()
+int llist_launch_all_tests()
 {
 	setlocale(LC_ALL, "ru");
-	assert(create_destroy_test() == 0);
-	assert(append_test() == 0);
-	assert(prepend_test() == 0);
-	assert(concat_test() == 0);
-	assert(copy_test() == 0);
-	assert(find_test() == 0);
-	assert(find_custom_test() == 0);
-	assert(foreach_test() == 0);
-	assert(get_test() == 0);
-	assert(get_last_test() == 0);
-	assert(length_test() == 0);
-	assert(remove_test() == 0);
-	assert(remove_all_equal_test() == 0);
-	assert(remove_first_equal_test() == 0);
-	assert(trip_to_index_test() == 0);
+	assert(llist_create_destroy_test() == 0);
+	assert(llist_append_test() == 0);
+	assert(llist_prepend_test() == 0);
+	assert(llist_concat_test() == 0);
+	assert(llist_copy_test() == 0);
+	assert(llist_find_test() == 0);
+	assert(llist_find_custom_test() == 0);
+	assert(llist_foreach_test() == 0);
+	assert(llist_get_test() == 0);
+	assert(llist_get_last_test() == 0);
+	assert(llist_length_test() == 0);
+	assert(llist_remove_test() == 0);
+	assert(llist_remove_all_equal_test() == 0);
+	assert(llist_remove_first_equal_test() == 0);
+	assert(llist_trip_to_index_test() == 0);
 
-	printf("\nВсе тесты успешно пройдены\n");
+	printf("\n--- Все тесты со связными списками успешно пройдены! ---\n\n");
 	return 0;
 }
 
-int create_destroy_test()
+int llist_create_destroy_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте create_destroy_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_create_destroy_test\n"));
 
 	Linked_list* next_number = llist;
 	for (int i = 0; i < TEST_LLIST_SIZE; ++i)
@@ -53,22 +53,22 @@ int create_destroy_test()
 	}
 
 	llist_destroy(llist);
-	printf("create_destroy_test успешно пройден\n");
+	printf("llist_create_destroy_test успешно пройден\n");
 	return 0;
 }
 
-int append_test()
+int llist_append_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	int number = 0;
 	Linked_list* llist = llist_append(NULL, &number, sizeof(int));
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте append_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_append_test\n"));
 
 	for (int i = 1; i < TEST_LLIST_SIZE; ++i)
 	{
 		llist = llist_append(llist, &i, sizeof(int));
-		assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте append_test\n"));
+		assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_append_test\n"));
 	}
 
 	Linked_list* next_number = llist;
@@ -79,22 +79,22 @@ int append_test()
 	}
 
 	llist_destroy(llist);
-	printf("append_test успешно пройден\n");
+	printf("llist_append_test успешно пройден\n");
 	return 0;
 }
 
-int prepend_test()
+int llist_prepend_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	int number = TEST_LLIST_SIZE - 1;
 	Linked_list* llist = llist_prepend(NULL, &number, sizeof(int));
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте prepend_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_prepend_test\n"));
 
 	for (int i = TEST_LLIST_SIZE - 2; i > -1; --i)
 	{
 		llist = llist_prepend(llist, &i, sizeof(int));
-		assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте prepend_test\n"));
+		assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_prepend_test\n"));
 	}
 
 	Linked_list* next_number = llist;
@@ -105,18 +105,18 @@ int prepend_test()
 	}
 
 	llist_destroy(llist);
-	printf("prepend_test успешно пройден\n");
+	printf("llist_prepend_test успешно пройден\n");
 	return 0;
 }
 
-int concat_test()
+int llist_concat_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist_1 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте concat_test\n"));
+	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте llist_concat_test\n"));
 	Linked_list* llist_2 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте concat_test\n"));
+	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте llist_concat_test\n"));
 	llist_1 = llist_concat(llist_1, llist_2);
 
 	Linked_list* next_number = llist_1;
@@ -133,18 +133,18 @@ int concat_test()
 
 	llist_destroy(llist_1);
 	// llist_2 очистится вместе с llist_1, т.к. мы их сконкатенировали
-	printf("concat_test успешно пройден\n");
+	printf("llist_concat_test успешно пройден\n");
 	return 0;
 }
 
-int copy_test()
+int llist_copy_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist_1 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте copy_test\n"));
+	assert(not_null_ptr(llist_1, "llist_Ошибка выделения памяти в тесте copy_test\n"));
 	Linked_list* llist_2 = llist_copy(llist_1);
-	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте copy_test\n"));
+	assert(not_null_ptr(llist_2, "llist_Ошибка выделения памяти в тесте copy_test\n"));
 
 	Linked_list* next_number_1 = llist_1;
 	Linked_list* next_number_2 = llist_2;
@@ -159,16 +159,16 @@ int copy_test()
 
 	llist_destroy(llist_1);
 	llist_destroy(llist_2);
-	printf("copy_test успешно пройден\n");
+	printf("llist_copy_test успешно пройден\n");
 	return 0;
 }
 
-int find_test()
+int llist_find_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(10);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте find_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_find_test\n"));
 
 	for (int i = 0; i < TEST_LLIST_SIZE * 2; ++i)
 	{
@@ -178,17 +178,17 @@ int find_test()
 	}
 
 	llist_destroy(llist);
-	printf("find_test успешно пройден\n");
+	printf("llist_find_test успешно пройден\n");
 	return 0;
 }
 
-int find_custom_test()
+int llist_find_custom_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
 	int custom_data;
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте find_custom_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_find_custom_test\n"));
 
 	for (int i = 0; i < TEST_LLIST_SIZE * 2; ++i)
 	{
@@ -199,16 +199,16 @@ int find_custom_test()
 	}
 
 	llist_destroy(llist);
-	printf("find_custom_test успешно пройден\n");
+	printf("llist_find_custom_test успешно пройден\n");
 	return 0;
 }
 
-int foreach_test()
+int llist_foreach_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте foreach_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_foreach_test\n"));
 	int multiplier = TEST_LLIST_SIZE;
 	llist_foreach(llist, multiply_int, &multiplier);
 	Linked_list* next_number = llist;
@@ -220,16 +220,16 @@ int foreach_test()
 	}
 
 	llist_destroy(llist);
-	printf("foreach_test успешно пройден\n");
+	printf("llist_foreach_test успешно пройден\n");
 	return 0;
 }
 
-int get_test()
+int llist_get_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте get_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_get_test\n"));
 
 	for (int i = 0; i < TEST_LLIST_SIZE * 2; ++i)
 	{
@@ -240,16 +240,16 @@ int get_test()
 	}
 
 	llist_destroy(llist);
-	printf("get_test успешно пройден\n");
+	printf("llist_get_test успешно пройден\n");
 	return 0;
 }
 
-int get_last_test()
+int llist_get_last_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте get_last_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_get_last_test\n"));
 
 	int* copy_of_the_last_number = llist_get_last(llist);
 	assert(*copy_of_the_last_number == TEST_LLIST_SIZE - 1);
@@ -257,30 +257,30 @@ int get_last_test()
 	assert(copy_of_the_last_number == NULL);
 
 	llist_destroy(llist);
-	printf("get_last_test успешно пройден\n");
+	printf("llist_get_last_test успешно пройден\n");
 	return 0;
 	return 0;
 }
 
-int length_test()
+int llist_length_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(10);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте length_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_length_test\n"));
 	assert(llist_length(NULL) == 0);
 	assert(llist_length(llist) == 10);
 	llist_destroy(llist);
-	printf("length_test успешно пройден\n");
+	printf("llist_length_test успешно пройден\n");
 	return 0;
 }
 
-int remove_test()
+int llist_remove_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте remove_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_remove_test\n"));
 	
 	// Удалим все узлы, кроме головы
 	for (int i = 0; i < TEST_LLIST_SIZE - 1; ++i)
@@ -294,20 +294,20 @@ int remove_test()
 	llist = llist_remove(llist, 0);
 	assert(llist_length(llist) == 0);
 	assert(llist == NULL);
-	printf("remove_test успешно пройден\n");
+	printf("llist_remove_test успешно пройден\n");
 	return 0;
 }
 
-int remove_all_equal_test()
+int llist_remove_all_equal_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist_1 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте remove_all_equal_test\n"));
+	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте llist_remove_all_equal_test\n"));
 	Linked_list* llist_2 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте remove_all_equal_test\n"));
+	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте llist_remove_all_equal_test\n"));
 	Linked_list* llist_3 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_3, "Ошибка выделения памяти в тесте remove_all_equal_test\n"));
+	assert(not_null_ptr(llist_3, "Ошибка выделения памяти в тесте llist_remove_all_equal_test\n"));
 	Linked_list* united_llist = llist_concat(llist_1, llist_concat(llist_2, llist_3));
 
 	for (int i = 0; i < TEST_LLIST_SIZE; ++i)
@@ -317,20 +317,20 @@ int remove_all_equal_test()
 	}
 
 	assert(united_llist == NULL);
-	printf("remove_all_equal_test успешно пройден\n");
+	printf("llist_remove_all_equal_test успешно пройден\n");
 	return 0;
 }
 
-int remove_first_equal_test()
+int llist_remove_first_equal_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist_1 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте remove_first_equal_test\n"));
+	assert(not_null_ptr(llist_1, "Ошибка выделения памяти в тесте llist_remove_first_equal_test\n"));
 	Linked_list* llist_2 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте remove_first_equal_test\n"));
+	assert(not_null_ptr(llist_2, "Ошибка выделения памяти в тесте llist_remove_first_equal_test\n"));
 	Linked_list* llist_3 = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist_3, "Ошибка выделения памяти в тесте remove_first_equal_test\n"));
+	assert(not_null_ptr(llist_3, "Ошибка выделения памяти в тесте llist_remove_first_equal_test\n"));
 	Linked_list* united_llist = llist_concat(llist_1, llist_concat(llist_2, llist_3));
 
 	for (int i = 0; i < 3; ++i)
@@ -343,16 +343,16 @@ int remove_first_equal_test()
 	}
 
 	assert(united_llist == NULL);
-	printf("remove_first_equal_test успешно пройден\n");
+	printf("llist_remove_first_equal_test успешно пройден\n");
 	return 0;
 }
 
-int trip_to_index_test()
+int llist_trip_to_index_test()
 {
 	setlocale(LC_ALL, "ru");
 
 	Linked_list* llist = create_llist_for_test(TEST_LLIST_SIZE);
-	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте trip_to_index_test\n"));
+	assert(not_null_ptr(llist, "Ошибка выделения памяти в тесте llist_trip_to_index_test\n"));
 
 	Linked_list* llist_node = llist_trip_to_index(NULL, 0);
 	assert(llist_node == NULL);
@@ -365,7 +365,7 @@ int trip_to_index_test()
 	}
 
 	llist_destroy(llist);
-	printf("trip_to_index_test успешно пройден\n");
+	printf("llist_trip_to_index_test успешно пройден\n");
 	return 0;
 }
 
