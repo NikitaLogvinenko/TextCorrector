@@ -1,4 +1,0 @@
-#ifndef _SPECIFIC_FUNCTIONS_
-#define _SPECIFIC_FUNCTIONS_
-
-#endif

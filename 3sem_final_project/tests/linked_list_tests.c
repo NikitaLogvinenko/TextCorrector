@@ -1,10 +1,7 @@
-#define TEST_LLIST_SIZE 10
-
-
-#include "linked_list.h"
 #include "ll_lib.h"
 #include "linked_list_tests.h"
 #include "helpful_functions.h"
+#include "constants.h"
 #include <locale.h>
 #include <assert.h>
 #include <stdlib.h>
