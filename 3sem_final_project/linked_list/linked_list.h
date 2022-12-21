@@ -15,4 +15,5 @@ typedef struct Linked_list
 	struct Linked_list* next; // указатель на следующий элемент списка
 } Linked_list;
 
+
 #endif

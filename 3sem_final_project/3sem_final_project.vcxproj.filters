@@ -36,7 +36,10 @@
     <ClCompile Include="corrector\edit_module.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="corrector\specific_functions.c">
+    <ClCompile Include="corrector\params_working.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="corrector\files_working.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,7 +68,13 @@
     <ClInclude Include="corrector\edit_module.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="corrector\specific_functions.h">
+    <ClInclude Include="constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\params_working.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\files_working.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

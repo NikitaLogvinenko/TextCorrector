@@ -129,8 +129,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="constants.c" />
     <ClCompile Include="corrector\edit_module.c" />
+    <ClCompile Include="corrector\files_working.c" />
     <ClCompile Include="corrector\helpful_functions.c" />
     <ClCompile Include="corrector\params_working.c" />
     <ClCompile Include="corrector\train_module.c" />
@@ -143,6 +143,7 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="corrector\CorrectorModel.h" />
     <ClInclude Include="corrector\edit_module.h" />
+    <ClInclude Include="corrector\files_working.h" />
     <ClInclude Include="corrector\helpful_functions.h" />
     <ClInclude Include="corrector\params_working.h" />
     <ClInclude Include="corrector\train_module.h" />

@@ -1,7 +1,9 @@
 #include "helpful_functions.h"
+#include "constants.h"
 #include <stdio.h>
-#include <stdbool.h>
 #include <locale.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 
@@ -33,4 +35,16 @@ bool ints_are_equal(int* number_1, int* number_2)
 void multiply_int(int* data, const int* multiplier)
 {
     *data *= *multiplier;
+}
+
+void print_help()//---------------------------------------------------------------------------------------------
+{
+    printf("HELP!\n");
+}
+
+void exit_soft(const char* exit_msg)
+{
+    printf("%s\n", exit_msg);
+    print_help();
+    exit(EXIT_SOFT_FAILURE);
 }

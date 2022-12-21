@@ -1,9 +1,5 @@
-#define SUCCESSFULLY_PERFORMED 0
-#define WRONG_MODE_ERROR 1
-
-
-#include "linked_list_tests.h"
-#include "help_func_tests.h"
+//#include "linked_list_tests.h"
+//#include "help_func_tests.h"
 #include "constants.h"
 #include "helpful_functions.h"
 #include "params_working.h"
@@ -11,7 +7,7 @@
 #include "edit_module.h"
 #include <stdio.h>
 #include <locale.h>
-#include <stdlib.h>
+
 
 int main(int argc, char** argv)
 {
@@ -19,11 +15,21 @@ int main(int argc, char** argv)
 	setlocale(LC_ALL, "ru");
 
 	Pointer* cfg = set_cfg(argc, argv);
-	int mode = 0;//*(int*)cfg[0];
-	printf("%d\n", mode);
-	delete_cfg(mode, cfg);
+	int mode = *(int*)cfg[0];
+	switch (mode)
+	{
+	case TRAIN_NEW_MODE:
+		exit_code = train_new_model(cfg);
+		break;
+	case TRAIN_EXISTED_MODE:
+		exit_code = train_existed_model(cfg);
+		break;
+	case EDIT_MODE:
+		exit_code = edit_text(cfg);
+		break;
+	}
 
-
+	delete_cfg(cfg);
 	return exit_code;
 }
 

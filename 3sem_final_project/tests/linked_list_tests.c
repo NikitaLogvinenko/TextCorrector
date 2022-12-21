@@ -1,7 +1,7 @@
-#include "ll_lib.h"
 #include "linked_list_tests.h"
-#include "helpful_functions.h"
+#include "ll_lib.h"
 #include "constants.h"
+#include "helpful_functions.h"
 #include <locale.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -365,6 +365,7 @@ int llist_trip_to_index_test()
 	printf("llist_trip_to_index_test успешно пройден\n");
 	return 0;
 }
+
 
 static Linked_list* create_llist_for_test(unsigned int range)
 {

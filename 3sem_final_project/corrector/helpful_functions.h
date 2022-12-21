@@ -1,10 +1,13 @@
 #ifndef _HELPFUL_FUNCTIONS_
 #define _HELPFUL_FUNCTIONS_
 
+
 #include <stdio.h>
 #include <stdbool.h>
 
+
 typedef void* Pointer;
+
 
 // Проверяет, что указатель не нулевой. Если нулевой - вывести сообщение об ошибке error_msg (не открылся файл, не выделилась память и тд)
 bool not_null_ptr(const Pointer ptr, const char* error_msg);
@@ -17,5 +20,12 @@ bool ints_are_equal(int* number_1, int* number_2);
 
 // умножить data на multiplier
 void multiply_int(int* data, const int* multiplier);
+
+// Вывести справку
+void print_help();
+
+// Написать сообщение exit_msg, вывести справку и выйти (ошибка по вине пользователя)
+void exit_soft(const char* exit_msg);
+
 
 #endif

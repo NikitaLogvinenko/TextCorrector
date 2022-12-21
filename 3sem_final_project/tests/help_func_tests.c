@@ -15,7 +15,7 @@ int help_func_launch_all_tests()
 	assert(help_func_ints_are_equal_test() == 0);
 	assert(help_func_multiply_int_test() == 0);
 
-	printf("\n--- Все тесты со вспомогательными функциями успешно пройдены ---\n\n");
+	printf("\n--- Все тесты со вспомогательными функциями успешно пройдены! ---\n\n");
 	return 0;
 }
 
