@@ -120,6 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\corrector;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\linked_list;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\tests;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

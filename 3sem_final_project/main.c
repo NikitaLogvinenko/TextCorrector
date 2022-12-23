@@ -14,7 +14,10 @@ int main(int argc, char** argv)
 	int exit_code = EXIT_SUCCESSFULLY;
 	setlocale(LC_ALL, "ru");
 
-	Pointer* cfg = set_cfg(argc, argv);
+	printf("\n*********************************************************************************************************************\n");
+	printf("# Настройка конфигурации программы...\n\n");
+	Pointer* cfg = set_cfg(argc, argv);  // в случае неудачи установки конфигурации программа завершится внутри set_cfg через exit с очисткой памяти
+	printf("\n# Конфигурация успешно настроена!\n\n");
 	int mode = *(int*)cfg[0];
 	switch (mode)
 	{
@@ -28,7 +31,6 @@ int main(int argc, char** argv)
 		exit_code = edit_text(cfg);
 		break;
 	}
-
 	delete_cfg(cfg);
 	return exit_code;
 }

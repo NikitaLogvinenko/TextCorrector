@@ -24,8 +24,15 @@ void multiply_int(int* data, const int* multiplier);
 // Вывести справку
 void print_help();
 
-// Написать сообщение exit_msg, вывести справку и выйти (ошибка по вине пользователя)
-void exit_soft(const char* exit_msg);
+// Написать сообщение exit_msg и выйти
+// Если ошибка по вине пользователя и она предсказывалась при разработке, то exit_code=EXIT_SOFT_FAILURE. Тогда ещё выводится справка.
+void exit_with_msg(const char* exit_msg, int exit_code);
+
+// Создать динамический массив из ptrs_amount указателей void*. Инициализировать указатели NULL. В случае ошибки выделения памяти возвращается NULL
+Pointer* empty_pointers_array(unsigned ptrs_amount);
+
+// Выделение памяти размером memory_size, либо max_attempts попыток, либо пока память не выделится (что произойдёт раньше). В случае неудачи вернёт NULL.
+Pointer retry_malloc(size_t memory_size, unsigned max_attempts);
 
 
 #endif

@@ -5,46 +5,99 @@
 #include <locale.h>
 #include <string.h>
 #include <stdlib.h>
+#include <direct.h>
 
 
 // Определить способ установки конфигурации работы программы
 static int define_set_way(int argc, char** argv);
 
+
 // Определить конфигурацию по параметрам. params_amount - сколько параметров из консоли попадёт в функцию (вдруг их недостаточно)
+// В случае ошибок работы с памятью возвращается NULL
 static Pointer* cfg_from_params(int params_amount, char** params_for_cfg);
 
 // Ввести конфигурацию в консоль
+// В случае ошибок работы с памятью возвращается NULL
 static Pointer* cfg_step_by_step();
 
 // Считать конфигурацию из файла. params_amount - сколько параметров из консоли попадёт в функцию (вдруг определён режим from_file, но путь не задан)
+// В случае ошибок работы с памятью возвращается NULL
 static Pointer* cfg_from_file(int params_amount, char** ptr_to_path);
+
+
+// Проверить в set_cfg, что весь cfg заполнен (нет NULL указателей).
+// Это может быть не так, если под какой-то параметр не выделилась память. В таком случае чистим остальные параметры и завершаем программу
+static void check_cfg_filled(Pointer* cfg);
+
 
 // Проверить что params_exist параметров не меньше, чем требуется (params_required).
 // Если недостаточно параметров, написать сообщение exit_msg, вывести справку и выйти
 static void sufficiently_params_check(int params_required, int params_exist, const char* exit_msg);
 
-// Ввести режим через консоль
-static int ask_mode();
 
-// Ввести конфигурацию для обучения новой модели через консоль
-static Pointer* ask_train_new_cfg();
+// Попросить пользователя ввести параметр конфигурации в консоль
+// В консоль выводится ask_msg с просьбой ввести параметр
+// Далее параметр считывается. Память под параметр выделяется динамически. Чтение параметра происходит в функции read_func из консоли (file=stdin)
+// Корректность введённого параметра проверяется функцией verification. Параметр просят ввести, пока он не пройдёт верификацию
+// Если функция верификации получает NULL, то она также должна возвращать true. Это означает ошибку работы с памятью, которая будет обработана в самом конце настройки cfg
+// В случае ошибок работы с памятью возвращается NULL. Если всё хорошо - возвращаем указатель на параметр
+// Если пользователь за выделенное число попыток не смог корректно ввести параметр, то пишем об этом, чистим cfg и завершаем работу приложения
+static Pointer ask_cfg_param(const char* ask_msg, Pointer (*read_func)(FILE*), bool (*verification)(Pointer), Pointer* cfg);
 
-// Ввести конфигурацию для обучения существующей модели через консоль
-static Pointer* ask_train_existed_cfg();
+// Ввести конфигурацию для обучения новой модели через консоль. Возвращается динамический массив указателей на параметры конфига
+// Режим уже выбран и он всегда передаётся правильный. Просто память под него уже выделена и его надо тоже записать в cfg
+// В случае ошибок работы с памятью возвращается NULL
+static Pointer* ask_train_new_cfg(int* mode);
 
-// Ввести конфигурацию для редактирования текста через консоль
-static Pointer* ask_edit_cfg();
+// Ввести конфигурацию для дообучения существующей модели через консоль. Возвращается динамический массив указателей на параметры конфига
+// Режим уже выбран и он всегда передаётся правильный. Просто память под него уже выделена и его надо тоже записать в cfg
+// В случае ошибок работы с памятью возвращается NULL
+static Pointer* ask_train_existed_cfg(int* mode);
 
+// Ввести конфигурацию для редактирования текста через консоль. Возвращается динамический массив указателей на параметры конфига
+// Режим уже выбран и он всегда передаётся правильный. Просто память под него уже выделена и его надо тоже записать в cfg
+// В случае ошибок работы с памятью возвращается NULL
+static Pointer* ask_edit_cfg(int* mode);
+
+
+// Считывает режим из потока file. Выделяет под него динамически память и возвращает указатель на номер режима. Если память не выделилась - вернёт NULL
+static int* read_mode(FILE* file);
+
+// Считывает путь сохранения модели из потока file. Выделяет под него динамически память и возвращает указатель на строку. Если память не выделилась - вернёт NULL
+static char* read_path_to_save(FILE* file);
+
+// Считывает путь к обучающему тексту из потока file. Выделяет под него динамически память и возвращает указатель на строку. Если память не выделилась - вернёт NULL
+static char* read_path_to_text(FILE* file);
+
+// Считывает максимальную длину изучаемых слов из потока file. Выделяет динамически память под параметр и возвращает указатель. Если память не выделилась - вернёт NULL
+static int* read_max_word_length(FILE* file);
+
+// Проверяет, что введённый пользователем режим существует
+static bool verify_mode(const int* mode_by_user);
+
+// Проверяет, что пользователь ввёл корректный путь для сохранения модели
+static bool verify_path_to_save(const char* path_to_save_by_user);
+
+// Проверяет, что пользователь ввёл корректный путь к обучающему тексту
+static bool verify_path_to_text(const char* path_to_save_by_user);
+
+// Проверяет, что пользователь ввёл корректную максимальную длину изучаемых слов
+static bool verify_max_word_length(const int* path_to_save_by_user);
+
+
+/*=================================================================================================================================================================================*/
 Pointer* set_cfg(int argc, char** argv)
 {
 	setlocale(LC_ALL, "ru");
-
+	// Определяем способ установки конфигурации
 	int set_way = define_set_way(argc, argv);
+	//Пользователь запросил справку
 	if (set_way == PRINT_HELP)
 	{
 		print_help();
 		exit(EXIT_SUCCESSFULLY);
 	}
+	// Пользователь хочет воспользоваться программой. Определяем конфигурацию
 	else
 	{
 		Pointer* cfg = NULL;
@@ -59,27 +112,32 @@ Pointer* set_cfg(int argc, char** argv)
 		case CFG_FROM_FILE:
 			cfg = cfg_from_file(argc - 2, argv + 2);  // пропускаем путь к программе и способ задания конфига
 			break;
-		}			
+		}
+		check_cfg_filled(cfg);
 		return cfg;
 	}
 }
 
 void delete_cfg(Pointer* cfg)
 {
-	int possible_cfg_sizes[] = { TRAIN_NEW_CFG_SIZE, TRAIN_EXISTED_CFG_SIZE, EDIT_CFG_SIZE };
-	int mode = *(int*)cfg[0];
-	int cfg_size = possible_cfg_sizes[mode];
-	for (int i = 0; i < cfg_size; ++i)
-		free(cfg[i]);
-
+	// Если память под конфиг выделилась и режим определён, то надо почистить память под указатели
+	if (cfg != NULL && cfg[0] != NULL)
+	{
+		int possible_cfg_sizes[] = { TRAIN_NEW_CFG_SIZE, TRAIN_EXISTED_CFG_SIZE, EDIT_CFG_SIZE };
+		int mode = *(int*)cfg[0];  // режим работы программы
+		int cfg_size = possible_cfg_sizes[mode];  // по режиму работы определяем количество параметров конфигурации
+		for (int i = 0; i < cfg_size; ++i)
+			free(cfg[i]);
+	}
 	free(cfg);
 }
+/*=================================================================================================================================================================================*/
 
 
 static int define_set_way(int argc, char** argv)
 {
 	int set_way = WRONG_PARAM;
-	if (argc == 1) // единственный параметр - путь к исполняемому файлу; просим пользователя ввести конфигурацию в консоль
+	if (argc == 1) // единственный параметр - путь к исполняемой программе; просим пользователя ввести конфигурацию в консоль
 		set_way = CFG_STEP_BY_STEP;
 	else
 	{
@@ -93,10 +151,11 @@ static int define_set_way(int argc, char** argv)
 			set_way = PRINT_HELP;
 	}
 	if (set_way == WRONG_PARAM)  // первый параметр введён неправильно; даём об этом знать, выводим справку и завершаем работу программы
-		exit_soft("Такой возможности установки конфигурации не предусмотрено.\n");
+		exit_with_msg("Такой возможности установки конфигурации не предусмотрено.\n", EXIT_USER_FAILURE);
 
 	return set_way;
 }
+
 
 static Pointer* cfg_from_params(int params_amount, char** params_for_cfg)//---------------------------------------------------------------------------------------------
 {
@@ -107,20 +166,34 @@ static Pointer* cfg_from_params(int params_amount, char** params_for_cfg)//-----
 
 static Pointer* cfg_step_by_step()
 {
-	int mode = ask_mode();
+	printf("Конфигурация работы программы не задана. Введите необходимые параметры в консоль\n\n");
+	// Формируем запрос на ввод режима работы
+	char str_1[BUFFER_SIZE] = "Режим работы корректора:\n";
+	char str_2[] = "\t\"train_new\" - обучение новой модели\n\t\"train_existed\" - дообучение существующей модели\n\t\"edit\" - редактирование текста\n";
+	char str_3[] = "Введите режим: ";
+	// Получаем режим работы
+	int* mode = ask_cfg_param(strcat(strcat(str_1, str_2), str_3), 
+		read_mode, verify_mode, NULL);
+	if (mode == NULL)  // не выделилась память под режим
+		exit_with_msg(APOLOGY_MEMORY_MSG, EXIT_MEMORY_FAILURE);
+	// В зависимости от режима проводим дальнейшую настройку конфигурации (указатель на режим передаётся, чтобы тоже записать его в cfg)
 	Pointer* cfg = NULL;
-	switch (mode)
+	switch (*mode)
 	{
 	case TRAIN_NEW_MODE:
-		cfg = ask_train_new_cfg();
+		cfg = ask_train_new_cfg(mode);
 		break;
 	case TRAIN_EXISTED_MODE:
-		cfg = ask_train_existed_cfg();
+		cfg = ask_train_existed_cfg(mode);
 		break;
 	case EDIT_MODE:
-		cfg = ask_edit_cfg();
+		cfg = ask_edit_cfg(mode);
 		break;
 	}
+	// Если не выделилась память под cfg, то дальше mode не почистится, а память под него уже выделена. Чистим вручную!
+	// Если же память под cfg выделилась, а под какой-то параметр нет, то mode будет уже в cfg и потом почистится, отдельно этого делать не надо
+	if (cfg == NULL)
+		free(mode);
 	return cfg;
 }
 
@@ -133,43 +206,147 @@ static Pointer* cfg_from_file(int params_amount, char** ptr_to_path)//----------
 	return NULL;
 }
 
+
+static void check_cfg_filled(Pointer* cfg)
+{
+	bool cfg_filled = true;
+	if (cfg == NULL || cfg[0] == NULL)
+		cfg_filled = false;
+	else
+	{
+		int possible_cfg_sizes[] = { TRAIN_NEW_CFG_SIZE, TRAIN_EXISTED_CFG_SIZE, EDIT_CFG_SIZE };
+		int mode = *(int*)cfg[0];  // режим работы программы
+		int cfg_size = possible_cfg_sizes[mode];  // по режиму работы определяем количество параметров конфигурации
+		for (int i = 1; i < cfg_size; ++i)
+		{
+			if (cfg[i] == NULL)
+				cfg_filled = false;
+		}
+	}
+	if (!cfg_filled)
+	{
+		delete_cfg(cfg);
+		exit_with_msg(APOLOGY_MEMORY_MSG, EXIT_MEMORY_FAILURE);
+	}
+}
+
+
 static void sufficiently_params_check(int params_required, int params_exist, const char* exit_msg)
 {
 	if (params_exist < params_required)
-		exit_soft(exit_msg);
+		exit_with_msg(exit_msg, EXIT_USER_FAILURE);
 }
 
-static int ask_mode()//---------------------------------------------------------------------------------------------
+
+static Pointer ask_cfg_param(const char* ask_msg, Pointer(*read_func)(FILE*), bool (*verification)(Pointer), Pointer* cfg)
 {
-	return 0;
+	if (ask_msg != NULL)
+		printf("%s", ask_msg);
+	Pointer param = read_func(stdin);
+	bool correct_param = verification(param);
+	// если пользователь ввёл параметр некорректно, даём ему ещё несколько попыток (пока он не введёт правильно, пока не потратит все попытки или пока не произойдёт ошибка памяти)
+	for (unsigned attempt = 0; attempt < MAX_USER_ATTEMPTS && correct_param == false; ++attempt)
+	{
+		free(param);
+		printf("Некорректный ввод. Повторите попытку: ");
+		param = read_func(stdin);
+		correct_param = verification(param);
+	}
+	if (correct_param == false) // пользователь не справился(((
+	{
+		free(param);
+		delete_cfg(cfg);
+		exit_with_msg("Превышено количество попыток. Прочитайте справку и попробуйте заново.\n", EXIT_USER_FAILURE);
+	}
+	return param; // пользователь справился))). Ну или не выделилась память...
 }
 
-static Pointer* ask_train_new_cfg()//---------------------------------------------------------------------------------------------
+static Pointer* ask_train_new_cfg(int* mode)
 {
-	Pointer* dummy_cfg = (Pointer*)malloc(sizeof(Pointer) * TRAIN_NEW_CFG_SIZE);
-	int* mode = (int*)malloc(sizeof(int));
-	*mode = 0;
-	dummy_cfg[0] = mode;
-	char* path_for_save = (char*)malloc(6 * sizeof(char));
-	const char* hello_phrase = "hello";
-	strcpy(path_for_save, hello_phrase);
-	dummy_cfg[1] = path_for_save;
-	char* path_to_text = (char*)malloc(6 * sizeof(char));
-	strcpy(path_to_text, hello_phrase);
-	dummy_cfg[2] = path_to_text;
-	int* max_word_size = (int*)malloc(sizeof(int));
-	*max_word_size = 20;
-	dummy_cfg[3] = max_word_size;
+	Pointer* train_new_cfg = empty_pointers_array(TRAIN_NEW_CFG_SIZE);
+	if (train_new_cfg != NULL)  // если память под cfg выделилась, заполняем его параметрами (не забыв указать на режим)
+	{
+		// Запоминаем режим
+		train_new_cfg[0] = mode;
 
-	return dummy_cfg;
+		// Получаем путь для сохранения модели
+		char str_1[BUFFER_SIZE] = "\nОбученная модель должна быть сохранена в файл В ФОРМАТЕ .TXT\nТекущая директория:\n";
+		char current_path[BUFFER_SIZE];
+		char str_2[BUFFER_SIZE] = "\nВведите абсолютный или относительный путь для сохранения файла в формате path\\model_name.txt: ";
+		_getcwd(current_path, BUFFER_SIZE);
+		train_new_cfg[1] = ask_cfg_param(strcat(strcat(str_1, current_path), str_2), 
+			read_path_to_save, verify_path_to_save, train_new_cfg);
+
+		// Получаем путь к обучающему тексту
+		strcpy(str_1, "\nМодель умеет учить слова, состоящие ТОЛЬКО из русских и английских букв.\nТекущая директория:\n");
+		strcpy(str_2, "Введите абсолютный или относительный путь к обучающему тексту в ФОРМАТЕ .TXT в виде path\\training_text_name.txt: ");
+		train_new_cfg[2] = ask_cfg_param(strcat(strcat(str_1, current_path), str_2),
+			read_path_to_text, verify_path_to_text, train_new_cfg);
+
+		// Получаем максимальную длину запоминаемых слов
+		sprintf(str_1, "\nМодель хранит слова одинаковой длины вместе.\nВведите максимальную длину слов для запоминания (не более %d): ", MAX_AVAILABLE_WORD_LENGTH);
+		train_new_cfg[3] = ask_cfg_param(str_1, read_max_word_length, verify_max_word_length, train_new_cfg);
+	}
+	return train_new_cfg;
 }
 
-static Pointer* ask_train_existed_cfg()//---------------------------------------------------------------------------------------------
+static Pointer* ask_train_existed_cfg(int* mode)//---------------------------------------------------------------------------------------------
 {
 	return NULL;
 }
 
-static Pointer* ask_edit_cfg()//---------------------------------------------------------------------------------------------
+static Pointer* ask_edit_cfg(int* mode)//---------------------------------------------------------------------------------------------
 {
 	return NULL;
+}
+
+static int* read_mode(FILE* file)//---------------------------------------------------------------------------------------------
+{
+	// добавить wrong_mode
+	int* dummy_mode = malloc(sizeof(int));
+	*dummy_mode = 0;
+	return dummy_mode;
+}
+
+static char* read_path_to_save(FILE* file)//---------------------------------------------------------------------------------------------
+{
+	char* hel = malloc(sizeof(char) * 6);
+	strcpy(hel, "hello");
+	return hel;
+}
+
+static char* read_path_to_text(FILE* file)//---------------------------------------------------------------------------------------------
+{
+	char* hel = malloc(sizeof(char) * 6);
+	strcpy(hel, "hello");
+	return hel;
+}
+
+static int* read_max_word_length(FILE* file)//---------------------------------------------------------------------------------------------
+{
+	int* dummy_length = malloc(sizeof(int));
+	*dummy_length = 10;
+	return dummy_length;
+}
+
+
+static bool verify_mode(const int* mode_by_user)//---------------------------------------------------------------------------------------------
+{
+	// в случае ошибки памяти возвращаем true. тогда из функции ask_cfg_param вернёться тоже NULL и в set_cfg мы поймём, что произошла ошибка памяти
+	return true;
+}
+
+static bool verify_path_to_save(const char* path_to_save_by_user)//---------------------------------------------------------------------------------------------
+{
+	return true;
+}
+
+static bool verify_path_to_text(const char* path_to_save_by_user)//---------------------------------------------------------------------------------------------
+{
+	return true;
+}
+
+static bool verify_max_word_length(const int* path_to_save_by_user)//---------------------------------------------------------------------------------------------
+{
+	return true;
 }

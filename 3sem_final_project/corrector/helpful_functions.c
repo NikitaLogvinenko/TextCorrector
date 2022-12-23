@@ -42,9 +42,30 @@ void print_help()//-------------------------------------------------------------
     printf("HELP!\n");
 }
 
-void exit_soft(const char* exit_msg)
+void exit_with_msg(const char* exit_msg, int exit_code)
 {
-    printf("%s\n", exit_msg);
-    print_help();
-    exit(EXIT_SOFT_FAILURE);
+    if (exit_msg != NULL)
+        printf("%s\n", exit_msg);
+    if (exit_code == EXIT_USER_FAILURE)
+        print_help();
+    exit(exit_code);
+}
+
+Pointer* empty_pointers_array(unsigned ptrs_amount)
+{
+    Pointer* array = (Pointer*)retry_malloc(sizeof(Pointer) * ptrs_amount, MAX_MALLOC_ATTEMPTS);
+    if (array != NULL) // если память выделилась, устанавливаем указатели в массиве в NULL
+    {
+        for (unsigned i = 0; i < ptrs_amount; ++i)
+            array[i] = NULL;
+    }
+    return array;
+}
+
+Pointer retry_malloc(size_t memory_size, unsigned max_attempts)
+{
+    Pointer dynamic_memory = NULL;
+    for (unsigned attempts = 0; attempts < max_attempts && dynamic_memory == NULL; ++attempts)
+        dynamic_memory = (Pointer)malloc(memory_size);
+    return dynamic_memory;
 }

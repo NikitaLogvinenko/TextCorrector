@@ -5,11 +5,13 @@
 #include <string.h>
 #include <stdbool.h>
 
+
 // Удалить голову, вернуть новую голову
 static Linked_list* remove_head(Linked_list* old_head);
 
 // Удалить следующий узел в списке
 static void remove_next(Linked_list* prev_node);
+
 
 Linked_list* llist_create(const Pointer data, size_t data_size)
 {
@@ -302,6 +304,7 @@ void llist_foreach(Linked_list* ll,
         ll = ll->next;
     }
 }
+
 
 static Linked_list* remove_head(Linked_list* old_head)
 {
