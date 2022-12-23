@@ -1,5 +1,5 @@
-#include "edit_module.h"
 #include "constants.h"
+#include "edit_module.h"
 #include <stdio.h>
 #include <locale.h>
 

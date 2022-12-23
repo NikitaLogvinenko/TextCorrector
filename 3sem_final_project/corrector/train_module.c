@@ -1,5 +1,5 @@
-#include "train_module.h"
 #include "constants.h"
+#include "train_module.h"
 #include <stdio.h>
 #include <locale.h>
 

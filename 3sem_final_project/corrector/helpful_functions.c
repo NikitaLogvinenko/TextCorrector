@@ -1,5 +1,5 @@
-#include "helpful_functions.h"
 #include "constants.h"
+#include "helpful_functions.h"
 #include <stdio.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -39,13 +39,15 @@ void multiply_int(int* data, const int* multiplier)
 
 void print_help()//---------------------------------------------------------------------------------------------
 {
+    setlocale(LC_ALL, "ru");
     printf("HELP!\n");
 }
 
 void exit_with_msg(const char* exit_msg, int exit_code)
 {
+    setlocale(LC_ALL, "ru");
     if (exit_msg != NULL)
-        printf("%s\n", exit_msg);
+        printf("%s", exit_msg);
     if (exit_code == EXIT_USER_FAILURE)
         print_help();
     exit(exit_code);

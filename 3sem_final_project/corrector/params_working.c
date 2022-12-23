@@ -1,6 +1,7 @@
 #include "params_working.h"
 #include "constants.h"
 #include "helpful_functions.h"
+#include "files_working.h"
 #include <stdio.h>
 #include <locale.h>
 #include <string.h>
@@ -12,17 +13,26 @@
 static int define_set_way(int argc, char** argv);
 
 
-// Определить конфигурацию по параметрам. params_amount - сколько параметров из консоли попадёт в функцию (вдруг их недостаточно)
-// В случае ошибок работы с памятью возвращается NULL
-static Pointer* cfg_from_params(int params_amount, char** params_for_cfg);
+// Определить конфигурацию по параметрам при запуске. params_amount - сколько параметров из консоли попадёт в функцию (вдруг их недостаточно)
+// Все параметры записываем во временный файл TMP_PARAMS_FILE и вызываем cfg_from_file(1, TMP_PARAMS_FILE)
+// ВСЕ параметры записываем в кавычках, т.к. во всех функциях read_... кавычки удаляются, т.к. их нет ни в каких параметрах. Это может быть полезно, если путь содержит пробелы
+// В случае ошибок работы с памятью возвращается NULL.
+// В случае ошибок работы с файлом программа мгновенно завершается с сообщением об ошибке. Возможны две ошибки с файлами:
+// 1. Ошибка создания TMP_PARAMS_FILE. Тогда временная память ещё не выделялась и чистить нечего
+// 2. Ошибка открытия файла TMP_PARAMS_FILE в ходе работы cfg_from_file
+// Т.к. память под параметры не выделялась до открытия, то чистить нечего, разве что надо удалить TMP_PARAMS_FILE в cfg_from_file
+static Pointer* cfg_from_params(int params_amount, const char** params_for_cfg);
 
 // Ввести конфигурацию в консоль
 // В случае ошибок работы с памятью возвращается NULL
 static Pointer* cfg_step_by_step();
 
-// Считать конфигурацию из файла. params_amount - сколько параметров из консоли попадёт в функцию (вдруг определён режим from_file, но путь не задан)
+// Считать конфигурацию из файла. params_amount - сколько параметров из консоли попадёт в функцию (должно быть не меньше одного - пути к конфигурации)
+// Параметры в файле должны идти через пробел. Если пробел входит в параметр (какой-либо путь содержит пробел), то заключить параметр в кавычки
 // В случае ошибок работы с памятью возвращается NULL
-static Pointer* cfg_from_file(int params_amount, char** ptr_to_path);
+// В случае ошибок работы с файлом программа мгновенно завершается с сообщением об ошибке. Возможна единственная ошибка при работе с файлом - ошибка открытия файла с конфигурацией
+// Т.к. память под параметры не выделялась до открытия, то чистить нечего. Разве что надо удалить TMP_PARAMS_FILE, если это был временный файл (параметры получены при запуске)
+static Pointer* cfg_from_file(int params_amount, const char** ptr_to_path);
 
 
 // Проверить в set_cfg, что весь cfg заполнен (нет NULL указателей).
@@ -32,7 +42,13 @@ static void check_cfg_filled(Pointer* cfg);
 
 // Проверить что params_exist параметров не меньше, чем требуется (params_required).
 // Если недостаточно параметров, написать сообщение exit_msg, вывести справку и выйти
-static void sufficiently_params_check(int params_required, int params_exist, const char* exit_msg);
+static bool sufficiently_params_check(int params_required, int params_exist, const char* exit_msg);
+
+
+// Создать файл file_name и открыть его в режиме open_mode. Используется для создания временного файла с параметрами для конфигурации в cfg_from_params.
+// В случае ошибки создания или открытия выход из программы с кодом EXIT_FILE_FAILURE. Иначе возвращаем указатель на открытый файл
+// file_name - ОТНОСИТЕЛЬНЫЙ ПУТЬ!!!
+static FILE* create_and_open_tmp(const char* tmp_file_name, const char* open_mode);
 
 
 // Попросить пользователя ввести параметр конфигурации в консоль
@@ -60,16 +76,20 @@ static Pointer* ask_train_existed_cfg(int* mode);
 static Pointer* ask_edit_cfg(int* mode);
 
 
-// Считывает режим из потока file. Выделяет под него динамически память и возвращает указатель на номер режима. Если память не выделилась - вернёт NULL
+// Считывает режим из потока file. Выделяет под него динамически память и возвращает указатель на номер режима.
+// Если память не выделилась - вернёт NULL. Предполагается что файл уже открыт
 static int* read_mode(FILE* file);
 
-// Считывает путь сохранения модели из потока file. Выделяет под него динамически память и возвращает указатель на строку. Если память не выделилась - вернёт NULL
+// Считывает путь сохранения модели из потока file. Выделяет под него динамически память и возвращает указатель на строку.
+// Если память не выделилась - вернёт NULL. Предполагается что файл уже открыт
 static char* read_path_to_save(FILE* file);
 
-// Считывает путь к обучающему тексту из потока file. Выделяет под него динамически память и возвращает указатель на строку. Если память не выделилась - вернёт NULL
+// Считывает путь к обучающему тексту из потока file. Выделяет под него динамически память и возвращает указатель на строку.
+// Если память не выделилась - вернёт NULL. Предполагается что файл уже открыт
 static char* read_path_to_text(FILE* file);
 
-// Считывает максимальную длину изучаемых слов из потока file. Выделяет динамически память под параметр и возвращает указатель. Если память не выделилась - вернёт NULL
+// Считывает максимальную длину изучаемых слов из потока file. Выделяет динамически память под параметр и возвращает указатель.
+// Если память не выделилась - вернёт NULL. Предполагается что файл уже открыт
 static int* read_max_word_length(FILE* file);
 
 // Проверяет, что введённый пользователем режим существует
@@ -157,11 +177,19 @@ static int define_set_way(int argc, char** argv)
 }
 
 
-static Pointer* cfg_from_params(int params_amount, char** params_for_cfg)//---------------------------------------------------------------------------------------------
+static Pointer* cfg_from_params(int params_amount, const char** params_for_cfg)
 {
 	sufficiently_params_check(1, params_amount, "В параметрах отсуствует режим работы программы\n");
-	/**/
-	return NULL;
+	// Если есть хоть один параметр, то создаём временный файл, записываем их туда и считываем функцией cfg_from_file
+	FILE* tmp_file = create_and_open_tmp(TMP_PARAMS_FILE, "w"); // если всё прошло без ошибок - вернётся указатель на открытый файл. В случае ошибки программа завершается
+	bool successfully_written = file_write(tmp_file, params_amount, params_for_cfg, "\"", " ", NULL);
+	fclose(tmp_file);
+	Pointer* cfg = NULL;
+	if (successfully_written)
+		cfg = cfg_from_file(1, &TMP_PARAMS_FILE); // если файл не откроется, это обработается в cfg_from_file; если произойдёт ошибка памяти, вернётся NULL
+	if (file_remove(TMP_PARAMS_FILE, "Ошибка удаления временного файла с параметрами. Удалите его сами при необходимости:\n") == false) // не получилось удалить временный файл
+		free(rel_to_abs_way(TMP_PARAMS_FILE, true, true)); // напечатаем пользователю об этом и предложим удалить, предоставив абсолютный путь
+	return cfg;
 }
 
 static Pointer* cfg_step_by_step()
@@ -197,7 +225,7 @@ static Pointer* cfg_step_by_step()
 	return cfg;
 }
 
-static Pointer* cfg_from_file(int params_amount, char** ptr_to_path)//---------------------------------------------------------------------------------------------
+static Pointer* cfg_from_file(int params_amount, const char** ptr_to_path)//---------------------------------------------------------------------------------------------
 {
 	sufficiently_params_check(1, params_amount, "Не задан путь к файлу с конфигурацией программы\n");
 
@@ -231,10 +259,31 @@ static void check_cfg_filled(Pointer* cfg)
 }
 
 
-static void sufficiently_params_check(int params_required, int params_exist, const char* exit_msg)
+static bool sufficiently_params_check(int params_required, int params_exist, const char* exit_msg)
 {
 	if (params_exist < params_required)
 		exit_with_msg(exit_msg, EXIT_USER_FAILURE);
+	return true;
+}
+
+
+static FILE* create_and_open_tmp(const char* tmp_file_name, const char* open_mode)
+{
+	bool tmp_created = file_create(tmp_file_name, NULL);
+	FILE* tmp_file = NULL;
+	if (tmp_created == false) // память ещё нигде не выделялась, можно спокойно выйти из программы
+		exit_with_msg("Ошибка создания временного файла.\nСожалеем и приносим извинения за доставленные неудобства!\nПовторите попытку\n", EXIT_FILE_FAILURE);
+	else
+	{
+		tmp_file = fopen(tmp_file_name, open_mode);
+		if (tmp_file == NULL) // временный файл создался, но почему-то не открылся; удаляем его и выходим
+		{
+			if (file_remove(tmp_file_name, "Не удалось удалить временный файл. Удалите его самостоятельно:\n") == false) // ещё и почему-то не удалось удалить файл
+				free(rel_to_abs_way(tmp_file_name, true, true));
+			exit_with_msg("Ошибка открытия временного файла.\nСожалеем и приносим извинения за доставленные неудобства!\nПовторите попытку\n", EXIT_FILE_FAILURE);
+		}
+	}
+	return tmp_file;
 }
 
 
@@ -271,21 +320,21 @@ static Pointer* ask_train_new_cfg(int* mode)
 
 		// Получаем путь для сохранения модели
 		char str_1[BUFFER_SIZE] = "\nОбученная модель должна быть сохранена в файл В ФОРМАТЕ .TXT\nТекущая директория:\n";
-		char current_path[BUFFER_SIZE];
+		char* current_path = rel_to_abs_way(NULL, false, true);
 		char str_2[BUFFER_SIZE] = "\nВведите абсолютный или относительный путь для сохранения файла в формате path\\model_name.txt: ";
-		_getcwd(current_path, BUFFER_SIZE);
 		train_new_cfg[1] = ask_cfg_param(strcat(strcat(str_1, current_path), str_2), 
 			read_path_to_save, verify_path_to_save, train_new_cfg);
 
 		// Получаем путь к обучающему тексту
 		strcpy(str_1, "\nМодель умеет учить слова, состоящие ТОЛЬКО из русских и английских букв.\nТекущая директория:\n");
-		strcpy(str_2, "Введите абсолютный или относительный путь к обучающему тексту в ФОРМАТЕ .TXT в виде path\\training_text_name.txt: ");
+		strcpy(str_2, "\nВведите абсолютный или относительный путь к обучающему тексту в ФОРМАТЕ .TXT в виде path\\training_text_name.txt: ");
 		train_new_cfg[2] = ask_cfg_param(strcat(strcat(str_1, current_path), str_2),
 			read_path_to_text, verify_path_to_text, train_new_cfg);
 
 		// Получаем максимальную длину запоминаемых слов
 		sprintf(str_1, "\nМодель хранит слова одинаковой длины вместе.\nВведите максимальную длину слов для запоминания (не более %d): ", MAX_AVAILABLE_WORD_LENGTH);
 		train_new_cfg[3] = ask_cfg_param(str_1, read_max_word_length, verify_max_word_length, train_new_cfg);
+		free(current_path);
 	}
 	return train_new_cfg;
 }
