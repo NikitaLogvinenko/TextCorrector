@@ -14,7 +14,6 @@ int main(int argc, char** argv)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
 	setlocale(LC_ALL, "ru");
-
 	printf("\n*********************************************************************************************************************\n");
 	printf("# Настройка конфигурации программы...\n\n");
 	Pointer* cfg = set_cfg(argc, argv);  // в случае неудачной установки конфигурации программа завершится внутри set_cfg через exit с очисткой памяти
@@ -38,6 +37,10 @@ int main(int argc, char** argv)
 
 	delete_cfg(cfg);
 	printf("\n# Программа успешно завершена. Благодарим за использование!\nДонаты принимаются на карту: --CENSORED--\n\n");
+	
+	printf("Введите что угодно для выхода из программы: ");
+	char wait = 0;
+	scanf("%c", &wait);
 	return exit_code;
 }
 
