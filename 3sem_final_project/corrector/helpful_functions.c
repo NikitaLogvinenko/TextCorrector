@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <windows.h>
 
 
 bool not_null_ptr(const Pointer ptr, const char* error_msg)
@@ -87,6 +88,8 @@ bool is_integer(char* possible_int)
 
 int read_param_from_console(char* buffer, size_t buffer_size)
 {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
     int read_result = EXIT_SUCCESSFULLY;
     fgets(buffer, buffer_size, stdin);
     int null_term_index = strlen(buffer); // индекс терминирующего нуля

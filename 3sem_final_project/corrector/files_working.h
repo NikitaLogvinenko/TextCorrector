@@ -42,5 +42,8 @@ char* rel_to_abs_way(const char* rel_name, bool print_way, bool print_errors);
 // ≈сли после всех операций в buffer останутьс€ кавычки - вернуть EXIT_USER_FAILURE
 int read_param_from_file(FILE* file_from, char* buffer, size_t buffer_size);
 
+// ѕровер€ет, что путь заканчиваетс€ на .txt
+bool path_is_txt(const char* path);
+
 
 #endif

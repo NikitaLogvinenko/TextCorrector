@@ -1,19 +1,19 @@
-//#include "linked_list_tests.h"/////////////////////////////////////// удалить /////////////////////////////////////////////
-//#include "help_func_tests.h"/////////////////////////////////////// удалить /////////////////////////////////////////////
 #include "constants.h"
 #include "helpful_functions.h"
 #include "params_working.h"
-#include "files_working.h"/////////////////////////////////////// удалить /////////////////////////////////////////////
 #include "train_module.h"
 #include "edit_module.h"
 #include <stdio.h>
 #include <locale.h>
+#include <windows.h>
 
 
 int main(int argc, char** argv)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
 	setlocale(LC_ALL, "ru");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
 
 	printf("\n*********************************************************************************************************************\n");
 	printf("# Настройка конфигурации программы...\n\n");

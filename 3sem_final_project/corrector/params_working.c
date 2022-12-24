@@ -154,10 +154,12 @@ static int* read_int_param(FILE* file_from);
 // Проверяет, что пользователь корректно ввёл режим работы (от 0 до (MODES_AMOUNT - 1))
 static bool verify_mode(const int* mode);
 
-// Проверяет, что пользователь корректно ввёл путь для сохранения новой модели/отредактированного текста (проверка, что путь заканчивается на .txt; далее пробует создать файл)
+// Проверяет, что пользователь корректно ввёл путь для сохранения новой модели/отредактированного текста
+// Проверка, что путь заканчивается на .txt; далее пробует создать файл в режиме записи
 static bool verify_path_to_new(const char* path_to_new);
 
-// Проверяет, что пользователь корректно ввёл путь к обученной модели/обучающему тексту/редактируемому тексту (проверка, что путь заканчивается на .txt; далее пробует открыть файл)
+// Проверяет, что пользователь корректно ввёл путь к обученной модели/обучающему тексту/редактируемому тексту
+// Проверка, что путь заканчивается на .txt; далее пробует открыть файл в режиме чтения
 static bool verify_path_to_existed(const char* path_to_existed);
 
 // Проверяет, что пользователь корректно ввёл максимальную длину слов (от 1 до (MAX_AVAILABLE_WORD_LENGTH - 1))
@@ -262,7 +264,7 @@ static Pointer* cfg_from_params(int params_amount, const char** params_for_cfg)
 
 static Pointer* cfg_step_by_step()
 {
-	printf("Конфигурация работы программы не задана. Введите необходимые параметры в консоль\n Параметры можно вводить в двойных кавычках\n\n");
+	printf("Конфигурация работы программы не задана. Введите необходимые параметры в консоль\nПараметры можно вводить в двойных кавычках\n");
 	// Вводим режим работы; если память под режим не выделится или режим введён не верно, то сразу же выйдем из программы (всё равно чистить пока нечего)
 	int* mode = ARV_mode(stdin, NULL);
 	Pointer* cfg = NULL;
@@ -626,7 +628,7 @@ static int* read_mode(FILE* file_from)
 	char buff_for_mode[BUFFER_SIZE];
 	int read_result = (file_from == stdin) ? read_param_from_console(buff_for_mode, BUFFER_SIZE) : read_param_from_file(file_from, buff_for_mode, BUFFER_SIZE);
 	// Если параметр успешно получен - проверяем его на корректность с точки зрения существования такого режима. Если всё хорошо - возвращаем номер режима
-	// Если параметр некорректный или произошла ошибка EXIT_USER_FAILURE, то возвращаем значение WRONG_MODE. Если произошла EXIT_MEMORY_FAILURE, возвращаем NULL;
+	// Если параметр некорректный или произошла ошибка EXIT_USER_FAILURE, то возвращаем значение WRONG_MODE. Если произошла EXIT_MEMORY_FAILURE, возвращаем NULL
 	int* mode = NULL;
 	if (read_result != EXIT_MEMORY_FAILURE)
 	{
@@ -644,16 +646,39 @@ static int* read_mode(FILE* file_from)
 
 static char* read_path_param(FILE* file_from)//---------------------------------------------------------------------------------------------
 {
-	char* hel = malloc(sizeof(char) * 6);
-	strcpy(hel, "hello");
-	return hel;
+	char buff_for_path[BUFFER_SIZE];
+	int read_result = (file_from == stdin) ? read_param_from_console(buff_for_path, BUFFER_SIZE) : read_param_from_file(file_from, buff_for_path, BUFFER_SIZE);
+	// Если параметр успешно получен - выделяем под него память. Если всё хорошо - возвращаем указатель на строку
+	// Если пир чтении параметра произошла ошибка EXIT_USER_FAILURE, то возвращаем значение WRONG_PATH. Если произошла EXIT_MEMORY_FAILURE, возвращаем NULL
+	if (read_result == EXIT_USER_FAILURE)
+		strcpy(buff_for_path, WRONG_PATH);
+	char* path = NULL;
+	if (read_result != EXIT_MEMORY_FAILURE)
+	{
+		size_t path_size = strlen(buff_for_path) + 1; // не забываем про терминирующий нуль
+		path = (char*)retry_malloc(sizeof(char) * path_size, MAX_MALLOC_ATTEMPTS);
+		if (path != NULL)
+			strcpy(path, buff_for_path);
+	}
+	return path;
 }
 
-static int* read_int_param(FILE* file_from)//---------------------------------------------------------------------------------------------
+static int* read_int_param(FILE* file_from)
 {
-	int* dummy_mode = malloc(sizeof(int));
-	*dummy_mode = 2;
-	return dummy_mode;
+	char buff_for_int[BUFFER_SIZE];
+	int read_result = (file_from == stdin) ? read_param_from_console(buff_for_int, BUFFER_SIZE) : read_param_from_file(file_from, buff_for_int, BUFFER_SIZE);
+	// Если параметр успешно получен - проверяем его на корректность (что это действительно int). Если всё хорошо - возвращаем указатель на число
+	// Если параметр некорректный или произошла ошибка EXIT_USER_FAILURE, то возвращаем значение WRONG_PARAM. Если произошла EXIT_MEMORY_FAILURE, возвращаем NULL
+	int* number = NULL;
+	if (read_result != EXIT_MEMORY_FAILURE)
+	{
+		number = (int*)retry_malloc(sizeof(int), MAX_MALLOC_ATTEMPTS);
+		if (number != NULL && (read_int_param == EXIT_USER_FAILURE || is_integer(buff_for_int) == false))
+			*number = WRONG_PARAM;
+		else if (number != NULL)
+			*number = atoi(buff_for_int);
+	}
+	return number;
 }
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -665,27 +690,45 @@ static bool verify_mode(const int* mode)
 
 static bool verify_path_to_new(const char* path_to_new)//---------------------------------------------------------------------------------------------
 {
-	return true;
+	bool correct_path = path_is_txt(path_to_new);
+	if (correct_path)
+	{
+		FILE* f;
+		if ((f = fopen(path_to_new, "w")) == NULL)
+			correct_path = false;
+		else
+			fclose(f);
+	}
+	return correct_path;
 }
 
 static bool verify_path_to_existed(const char* path_to_existed)//---------------------------------------------------------------------------------------------
 {
-	return true;
+	bool correct_path = path_is_txt(path_to_existed);
+	if (correct_path)
+	{
+		FILE* f;
+		if ((f = fopen(path_to_existed, "r")) == NULL)
+			correct_path = false;
+		else
+			fclose(f);
+	}
+	return correct_path;
 }
 
-static bool verify_max_word_length(const int* max_word_length)//---------------------------------------------------------------------------------------------
+static bool verify_max_word_length(const int* max_word_length)
 {
-	return true;
+	return (*max_word_length >= 1 && *max_word_length <= MAX_AVAILABLE_WORD_LENGTH) ? true : false;
 }
 
-static bool verify_size_tol(const int* size_tol)//---------------------------------------------------------------------------------------------
+static bool verify_size_tol(const int* size_tol)
 {
-	return true;
+	return (*size_tol >= 0 && *size_tol <= MAX_AVAILABLE_MISSES) ? true : false;
 }
 
-static bool verify_threshold(const int* threshold)//---------------------------------------------------------------------------------------------
+static bool verify_threshold(const int* threshold)
 {
-	return true;
+	return (*threshold >= 0 && *threshold <= MAX_AVAILABLE_ERRORS) ? true : false;
 }
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/

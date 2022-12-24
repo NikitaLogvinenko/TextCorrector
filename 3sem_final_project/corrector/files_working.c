@@ -117,3 +117,17 @@ int read_param_from_file(FILE* file_from, char* buffer, size_t buffer_size)
 		read_result = EXIT_USER_FAILURE;
 	return read_result;
 }
+
+bool path_is_txt(const char* path)
+{
+	bool is_txt = true;
+	if (path == NULL || strlen(path) <= 4)
+		is_txt = false;
+	else
+	{
+		int term_null_index = strlen(path);
+		if (strcmp(".txt", path + term_null_index - 4) != 0)
+			is_txt = false;
+	}
+	return is_txt;
+}
