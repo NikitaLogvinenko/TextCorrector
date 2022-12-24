@@ -71,3 +71,47 @@ Pointer retry_malloc(size_t memory_size, unsigned max_attempts)
         dynamic_memory = (Pointer)malloc(memory_size);
     return dynamic_memory;
 }
+
+bool is_integer(char* possible_int)
+{
+    bool answer = true;
+    if (possible_int == NULL || *possible_int == '\0')
+        answer = false;
+    while (*possible_int != '\0' && answer) // проверяем символы, пока не встретим '\0' или символ, отличный от цифры
+    {
+        answer *= ((int)*possible_int <= (int)'9') && ((int)*possible_int >= (int)'0');
+        ++possible_int;
+    }
+    return answer;
+}
+
+int read_param_from_console(char* buffer, size_t buffer_size)
+{
+    int read_result = EXIT_SUCCESSFULLY;
+    fgets(buffer, buffer_size, stdin);
+    int null_term_index = strlen(buffer); // индекс терминирующего нуля
+    if (null_term_index == buffer_size - 1 && buffer[null_term_index - 1] != '\n') // не хватило буфера
+    {
+        read_result = EXIT_MEMORY_FAILURE;
+        clear_buff;
+    }
+    else
+    {
+        buffer[null_term_index - 1] = '\0'; // заменяем \n на \0
+        --null_term_index;
+        if (buffer[0] == '"' && buffer[null_term_index - 1] == '"') // кавычки в начале и в конце, удалим их
+        {
+            memmove(buffer, buffer + 1, null_term_index); // затёрли левую кавычку
+            --null_term_index; // т.к. передвинули
+            buffer[null_term_index - 1] = '\0'; // удалили правую кавычку
+        }
+        if (strchr(buffer, '"') != NULL) // в параметрах ещё остались кавычки, значит пользователь некорректно ввёл параметр
+            read_result = EXIT_USER_FAILURE;
+    }
+    return read_result;
+}
+
+void clear_buff()
+{
+    while (getchar() != '\n');
+}

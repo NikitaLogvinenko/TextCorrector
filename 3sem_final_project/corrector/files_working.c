@@ -88,3 +88,32 @@ char* rel_to_abs_way(const char* rel_name, bool print_way, bool print_errors)
 		printf("%s\n", tmp_path);
 	return tmp_path;
 }
+
+int read_param_from_file(FILE* file_from, char* buffer, size_t buffer_size)
+{
+	int read_result = EXIT_SUCCESSFULLY;
+	int symbol_code = fgetc(file_from);
+	while (symbol_code == (int)' ')
+		symbol_code = fgetc(file_from);
+	int stop_code = ' ';
+	if (symbol_code == (int)'"')
+	{
+		symbol_code = fgetc(file_from);
+		stop_code = (int)'"';
+	}
+	int last_index = 0;
+	for (; last_index < buffer_size - 1 && symbol_code != EOF && symbol_code != stop_code; ++last_index) // один символ оставляем под '\0'
+	{
+		buffer[last_index] = (char)symbol_code;
+		symbol_code = fgetc(file_from);
+	}
+	if (symbol_code == EOF && stop_code == '"') // дошли до конца файла, но не нашли закрывающую кавычку; ну что сделать, некорректный ввод!
+		read_result = EXIT_USER_FAILURE;
+	else if (last_index == buffer_size - 1 && symbol_code != stop_code)  // заполнили весь буфер, а параметр ещё не закончился; ошибка выделения памяти!
+		read_result = EXIT_MEMORY_FAILURE;
+	else // успешно прочитали параметр!
+		buffer[last_index] = '\0';
+	if (strchr(buffer, '"') != NULL) // в параметрах ещё остались кавычки, значит пользователь некорректно ввёл параметр
+		read_result = EXIT_USER_FAILURE;
+	return read_result;
+}
