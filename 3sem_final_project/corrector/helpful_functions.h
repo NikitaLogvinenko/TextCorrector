@@ -50,4 +50,11 @@ int read_param_from_console(char* buffer, size_t buffer_size);
 // Очистить буфер (считать все символы из stdin, пока не встретит \n)
 void clear_buff();
 
+// Вывести конфигурацию работы программы. Предполагается, что она верная
+void print_train_new_cfg(Pointer* cfg);
+// Вывести конфигурацию работы программы. Предполагается, что она верная
+void print_train_existed_cfg(Pointer* cfg);
+// Вывести конфигурацию работы программы. Предполагается, что она верная
+void print_edit_cfg(Pointer* cfg);
+
 #endif
