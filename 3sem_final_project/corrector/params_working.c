@@ -439,28 +439,10 @@ static Pointer* ask_train_existed_cfg(FILE* file_from, const char* path_to_cfg, 
 	{
 		// Запоминаем режим
 		train_existed_cfg[0] = mode;
-
-		//////////////// Получаем путь для сохранения модели
-		//////////////char str_1[BUFFER_SIZE] = "\nОбученная модель должна быть сохранена в файл В ФОРМАТЕ .TXT\nТекущая директория:\n";
-		//////////////char* current_path = rel_to_abs_way(NULL, false, true);
-		//////////////char str_2[BUFFER_SIZE] = "\nВведите абсолютный или относительный путь для сохранения модели в формате path\\model_name.txt: ";
-		//////////////train_new_cfg[1] = ask_cfg_param(file_from, path_to_cfg,
-		//////////////	read_path_to_save, verify_path_to_save,
-		//////////////	train_new_cfg, "ПУТЬ ДЛЯ СОХРАНЕНИЯ МОДЕЛИ", strcat(strcat(str_1, current_path), str_2));
-
-		//////////////// Получаем путь к обучающему тексту
-		//////////////strcpy(str_1, "\nМодель умеет учить слова, состоящие ТОЛЬКО из русских и английских букв.\nТекущая директория:\n");
-		//////////////strcpy(str_2, "\nВведите абсолютный или относительный путь к обучающему тексту в ФОРМАТЕ .TXT в виде path\\training_text_name.txt: ");
-		//////////////train_new_cfg[2] = ask_cfg_param(file_from, path_to_cfg,
-		//////////////	read_path_to_text, verify_path_to_text,
-		//////////////	train_new_cfg, "ПУТЬ К ОБУЧАЮЩЕМУ ТЕКСТУ", strcat(strcat(str_1, current_path), str_2));
-
-		//////////////// Получаем максимальную длину запоминаемых слов
-		//////////////sprintf(str_1, "\nМодель хранит слова одинаковой длины вместе.\nВведите максимальную длину слов для запоминания (не более %d): ", MAX_AVAILABLE_WORD_LENGTH);
-		//////////////train_new_cfg[3] = ask_cfg_param(file_from, path_to_cfg,
-		//////////////	read_max_word_length, verify_max_word_length,
-		//////////////	train_new_cfg, "МАКСИМАЛЬНАЯ ДЛИНА ЗАПОМИНАЕМЫХ СЛОВ", str_1);
-		//////////////free(current_path);
+		// Получаем путь к обученной модели
+		train_existed_cfg[1] = ARV_path_to_existed_model(file_from, path_to_cfg, train_existed_cfg);
+		// Получаем путь к обучающему тексту
+		train_existed_cfg[2] = ARV_path_to_existed_text(file_from, path_to_cfg, train_existed_cfg, mode);
 	}
 	return train_existed_cfg;
 }
@@ -626,7 +608,7 @@ static int* read_mode(FILE* file_from)//----------------------------------------
 	// читаем строку, возвращаем int
 	// добавить wrong_mode
 	int* dummy_mode = malloc(sizeof(int));
-	*dummy_mode = 0;
+	*dummy_mode = 1;
 	return dummy_mode;
 }
 
