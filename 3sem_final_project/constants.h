@@ -38,6 +38,8 @@
 #define TRAIN_EXISTED_MODE 1
 // –ежим редактировани€ текста
 #define EDIT_MODE 2
+// —колько всего режимов работы
+#define MODES_AMOUNT 3
 
 // „исло параметров в конфиге в режиме TRAIN_NEW
 #define TRAIN_NEW_CFG_SIZE 4
@@ -61,6 +63,10 @@
 ƒаже если длинное слово встретитс€ в тексте, то скорее всего не удастс€ подобрать ему более короткой замены, если только не установить очень большой threshold
 */
 # define MAX_AVAILABLE_WORD_LENGTH 35
+// —колько максимум может быть пропущено букв (size_tol)
+# define MAX_AVAILABLE_MISSES 3
+// —колько максимум букв могут быть с опечаткой (threshold)
+# define MAX_AVAILABLE_ERRORS 5
 
 // –азмер списка дл€ тестов св€зных списков
 #define TEST_LLIST_SIZE 10
