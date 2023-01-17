@@ -56,3 +56,4 @@ dkms.conf
 *.vs
 *Debug
 *.user
+notes.txt

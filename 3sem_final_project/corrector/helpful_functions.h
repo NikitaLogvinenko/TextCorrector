@@ -15,17 +15,18 @@ bool not_null_ptr(const Pointer ptr, const char* error_msg);
 // Проверяет, что данные по указателям побайтово совпадают (с учётом размеров данных)
 bool datas_are_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size);
 
-// Проверка, что два числа равны
+// Проверка, что два числа равны, используя указатели
 bool ints_are_equal(int* number_1, int* number_2);
 
-// умножить data на multiplier
+// умножить data на multiplier (изменить значение data в памяти)
 void multiply_int(int* data, const int* multiplier);
 
 // Вывести справку
 void print_help();
 
 // Написать сообщение exit_msg и выйти
-// Если ошибка по вине пользователя и она предсказывалась при разработке, то exit_code=EXIT_SOFT_FAILURE. Тогда ещё выводится справка.
+// exit_code - код ошибки для выхода
+// Если ошибка по вине пользователя - вывести справку
 void exit_with_msg(const char* exit_msg, int exit_code);
 
 // Создать динамический массив из ptrs_amount указателей void*. Инициализировать указатели NULL. В случае ошибки выделения памяти возвращается NULL
@@ -44,7 +45,7 @@ bool is_integer(char* possible_int);
 // Если не хватило памяти, то делаем очистку буфера и возвращаем EXIT_MEMORY_FAILURE.
 // Если памяти хватило, то, во-первых, удаляем \n в конце (заменяем на \0). Во-вторых, проверяем, если строка начинается и заканчивается кавычками, то удаляем их.
 // Если кавычек нет или они парные - возвращаем EXIT_SUCCESSFULLY. Если кавычки только одни - возвращаем EXIT_USER_FAILURE
-// Если после всех операций в buffer остануться кавычки - вернуть EXIT_USER_FAILURE
+// Если после всех операций в buffer останутся кавычки - вернуть EXIT_USER_FAILURE
 int read_param_from_console(char* buffer, size_t buffer_size);
 
 // Очистить буфер (считать все символы из stdin, пока не встретит \n)

@@ -1,31 +1,24 @@
 #include "constants.h"
 #include "helpful_functions.h"
 #include <stdio.h>
-#include <locale.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <windows.h>
 
 
 bool not_null_ptr(const Pointer ptr, const char* error_msg)
 {
-    setlocale(LC_ALL, "ru");
     if (ptr != NULL) return true;
-
-    if (error_msg != NULL) printf("%s\n", error_msg);
+    if (error_msg != NULL) 
+        printf("%s", error_msg);
     return false;
 }
 
 bool datas_are_equal(const Pointer data1, size_t data1_size, const Pointer data2, size_t data2_size)
 {
     if (data1_size != data2_size) return false; // не совпадает размер данных
-
-    const char* char_ptr1 = (char*)data1;
-    const char* char_ptr2 = (char*)data2;
-    bool data_is_equal = (bool)(strncmp(char_ptr1, char_ptr2, data1_size) == 0);  // побайтовое сравнение
-
-    return data_is_equal;
+    bool datas_are_equal = (bool)(memcmp(data1, data2, data1_size) == 0);  // побайтовое сравнение
+    return datas_are_equal;
 }
 
 bool ints_are_equal(int* number_1, int* number_2)
@@ -40,14 +33,14 @@ void multiply_int(int* data, const int* multiplier)
 
 void print_help()
 {
-    setlocale(LC_ALL, "ru");
-    printf("3sem_final_project.exe [set_cfg_way] [appropriate_params]\n");
+    printf("\t\tWARNING: ИМЕНА ФАЙЛОВ НЕ ДОЛЖНЫ СОДЕРЖАТЬ `%s`, ИНАЧЕ ОНИ МОГУТ БЫТЬ УДАЛЕНЫ!!!", TMP_SUFFIX);
+    printf("\n3sem_final_project.exe [set_cfg_way] [appropriate_params]\n");
     printf("Все параметры вводятся через пробел. Допустимо заключать параметры в двойные кавычки\n\n");
     printf("Возможные варианты set_cfg_way:\n");
     printf("\t1. params (задать конфигурацию в параметрах)\n\t2. step_by_step (последовательно ввести конфигурацию в консоль)\n");
-    printf("\t3.from_file(конфигурация записана в файле)\n\t4.help (вывести справку по программе)\n");
+    printf("\t3. from_file(конфигурация записана в файле\n\t4. help (вывести справку по программе)\n");
     printf("Полное отсутствие параметров эквивалентно 2. step_by_step\n\n");
-    printf("В случае 3. from_file в appropriate_params должен быть только путь к файлу с конфигурацией. Файл должен содержать записи параметров аналогично params (см. далее)\n\n");
+    printf("В случае 3. from_file в appropriate_params должен быть только путь к файлу с конфигурацией. Файл должен содержать записи параметров аналогично params (см. далее), параметры могут быть заключены в ДВОЙНЫЕ кавычки\n\n");
     printf("В случае 1. params в первую очередь должно идти название режима работы программы:\n");
     printf("\t1. train_new (обучение новой модели)\n\t2. train_existed (дообучение существующей модели)\n\t3. edit (редактирование текста с помощью обученной модели)\n\n");
     printf("В режиме train_new необходимы следующие параметры:\n");
@@ -63,7 +56,6 @@ void print_help()
 
 void exit_with_msg(const char* exit_msg, int exit_code)
 {
-    setlocale(LC_ALL, "ru");
     if (exit_msg != NULL)
         printf("%s", exit_msg);
     if (exit_code == EXIT_USER_FAILURE)
@@ -95,7 +87,7 @@ bool is_integer(char* possible_int)
     bool answer = true;
     if (possible_int == NULL || *possible_int == '\0')
         answer = false;
-    while (*possible_int != '\0' && answer) // проверяем символы, пока не встретим '\0' или символ, отличный от цифры
+    while (answer && *possible_int != '\0') // проверяем символы, пока не встретим '\0' или символ, отличный от цифры
     {
         answer *= ((int)*possible_int <= (int)'9') && ((int)*possible_int >= (int)'0');
         ++possible_int;
@@ -105,27 +97,25 @@ bool is_integer(char* possible_int)
 
 int read_param_from_console(char* buffer, size_t buffer_size)
 {
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
     int read_result = EXIT_SUCCESSFULLY;
     fgets(buffer, buffer_size, stdin);
     int null_term_index = strlen(buffer); // индекс терминирующего нуля
-    if (null_term_index == buffer_size - 1 && buffer[null_term_index - 1] != '\n') // не хватило буфера
+    if (null_term_index == buffer_size - 1 && buffer[null_term_index - 1] != '\n') // не хватило буфера (последний - '\0', а предпоследний не '\n')
     {
         read_result = EXIT_MEMORY_FAILURE;
-        clear_buff;
+        clear_buff();
     }
     else
     {
         buffer[null_term_index - 1] = '\0'; // заменяем \n на \0
-        --null_term_index;
+        --null_term_index;  // обновляем индекс нуль-терминатора
         if (buffer[0] == '"' && buffer[null_term_index - 1] == '"') // кавычки в начале и в конце, удалим их
         {
             memmove(buffer, buffer + 1, null_term_index); // затёрли левую кавычку
-            --null_term_index; // т.к. передвинули
+            --null_term_index; // обновляем инлекс нуль-терминатора, т.к. передвинули
             buffer[null_term_index - 1] = '\0'; // удалили правую кавычку
         }
-        if (strchr(buffer, '"') != NULL) // в параметрах ещё остались кавычки, значит пользователь некорректно ввёл параметр
+        if (strchr(buffer, '"') != NULL) // в параметрах ещё остались кавычки, значит пользователь некорректно ввёл параметр (кавычки нигде не предусмотрены)
             read_result = EXIT_USER_FAILURE;
     }
     return read_result;
