@@ -9,7 +9,7 @@
 #include <string.h>
 
 
-static void add_one(const char* word, int* number);
+static void add_one(const char* word, unsigned* number);
 
 void mlist_tests()
 {
@@ -17,7 +17,7 @@ void mlist_tests()
 	printf("MarkedList tests were launched\n");
 
 	// попробуем создать некорректный список
-	MList* ml = mlist_create(NULL);
+	MList* ml = mlist_create(NULL, 10);
 	assert(ml == NULL);
 	// создадим нормальный список
 	char* word1 = (char*)retry_malloc(strlen("Слово1") + 1, MAX_MALLOC_ATTEMPTS);
@@ -45,19 +45,19 @@ void mlist_tests()
 	if (not_null_ptr(word8, "Ошибка выделения памяти под слово в тестах\n"))
 		strcpy(word8, "Слово0");
 
-	ml = mlist_create(word1);
+	ml = mlist_create(word1, 1);
 	assert(ml != NULL);
 	// добавим новые слова
-	ml = mlist_add(ml, word2);
-	ml = mlist_add(ml, word3);
+	ml = mlist_add(ml, word2, 1);
+	ml = mlist_add(ml, word3, 1);
 	// напечатаем список
 	print_mlist(ml);
 	// проверим функцию подсчёта длины
 	assert(mlist_length(ml) == 3);
 	// попробуем вставить значения с существующим ключём, проверим, что длина списка не меняется
-	ml = mlist_add(ml, word4);
-	ml = mlist_add(ml, word5);
-	ml = mlist_add(ml, word6);
+	ml = mlist_add(ml, word4, 1);
+	ml = mlist_add(ml, word5, 1);
+	ml = mlist_add(ml, word6, 1);
 	assert(mlist_length(ml) == 3);
 	// напечатаем список
 	print_mlist(ml);
@@ -69,13 +69,14 @@ void mlist_tests()
 	assert(mlist_find(ml, "Такого нет") == NULL);
 	assert(mlist_find(ml, "Слово2")->counter == 2);
 	// добавим оставшиеся числа
-	ml = mlist_add(ml, word7);
-	ml = mlist_add(ml, word8);
+	ml = mlist_add(ml, word7, 7);
+	ml = mlist_add(ml, word8, 1);
+	assert(*mlist_get(ml, "Слово7") == 7);
 	print_mlist(ml);
 	// удалим Слово0 (голову), слово1 (хвост) и слово3 (в середине)
 	ml = mlist_remove(ml, "Слово0");
 	print_mlist(ml);
-	assert(ml->counter == 1);  // в голове теперь Слово7
+	assert(ml->counter == 7);  // в голове теперь Слово7
 	ml = mlist_remove(ml, "Слово1");
 	print_mlist(ml);
 	assert(!mlist_has(ml, "Слово1"));  // удалили Слово1
@@ -93,7 +94,7 @@ void mlist_tests()
 	printf("*******************************************************************************************\n");
 }
 
-static void add_one(const char* word, int* number)
+static void add_one(const char* word, unsigned* number)
 {
 	++*number;
 	printf("Data with the key \"%s\" was increased by 1\n", word);

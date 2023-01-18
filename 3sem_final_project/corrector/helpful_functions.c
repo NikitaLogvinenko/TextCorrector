@@ -156,3 +156,18 @@ void print_edit_cfg(Pointer* cfg)
     printf("6. Максимально допустимая разность слов: %d\n", *(int*)cfg[5]);
     printf("\n<<<<<<<<<<<<<<<< -------------------- >>>>>>>>>>>>>>>>\n\n");
 }
+
+bool yes_no_question()
+{
+    printf("[Y]/[N]: ");
+    char ans = getchar();
+    while (ans != 'Y' && ans != 'N')
+    {
+        while (getchar() != '\n');  // чистка буфера
+        printf("Введите Y или N: ");
+        ans = getchar();
+    }
+    while (getchar() != '\n');  // удалить оставшиеся в буфере символы
+    if (ans == 'Y') return true;
+    return false;
+}

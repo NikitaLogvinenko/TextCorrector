@@ -58,4 +58,8 @@ void print_train_existed_cfg(Pointer* cfg);
 // Вывести конфигурацию работы программы. Предполагается, что она верная
 void print_edit_cfg(Pointer* cfg);
 
+// задать вопрос да/нет в консоли
+bool yes_no_question();
+
+
 #endif

@@ -6,7 +6,7 @@
 // counter - сколько раз слово встретилось при обучении. Статическая память
 typedef struct MarkedList {
     const char* word;
-    int counter;
+    unsigned counter;
     struct MarkedList* next;
 } MList;
 

@@ -12,7 +12,7 @@
 
 
 
-MList* mlist_create(const char* word)  // предполагается, что память под Mlist выделяется только динамически
+MList* mlist_create(const char* word, unsigned counter)  // предполагается, что память под MList выделяется только динамически
 {
     MList* new_ml = NULL;
     if (not_null_ptr(word, "Невозможно выучить слово нулевой длины\n"))
@@ -21,7 +21,7 @@ MList* mlist_create(const char* word)  // предполагается, что память под Mlist в
         if (not_null_ptr(new_ml, "Ошибка выделения памяти под объект MList для хранения слова %s\n", word))
         {
             new_ml->word = word;
-            new_ml->counter = 1;
+            new_ml->counter = counter;
             new_ml->next = NULL;
         }
     }
@@ -49,13 +49,13 @@ unsigned mlist_length(const MList* ml)
     return length;
 }
 
-MList* mlist_add(MList* ml, const char* word)
+MList* mlist_add(MList* ml, const char* word, unsigned counter)
 {
     MList* new_head = ml;
     MList* existing_node = mlist_find(ml, word);
-    if (existing_node != NULL) // если слово уже есть - добавить к счётчику 1
+    if (existing_node != NULL) // если слово уже есть - добавить к счётчику counter
     {
-        existing_node->counter += 1;
+        existing_node->counter += counter;
         // Т.к. слова хранятся в динамической памяти, но у нас два участка памяти с одинаковым словом
         // Тогда участок с повторением нужно очистить, т.к. он больше нигде не используется
         // Слова добавляются только при обучении. Мы читаем слово, записываем в таблицу и больше нигде не используем слово отдельно. Если оно не попало в таблицу - оно не нужно
@@ -63,21 +63,21 @@ MList* mlist_add(MList* ml, const char* word)
     }
     else  // если нет - добавляем новое слово в список
     {
-        new_head = mlist_create(word);
+        new_head = mlist_create(word, counter);
         if (not_null_ptr(new_head, "Ошибка выделения памяти при добавлении слова\n")) // если память под новое слово выделилась - делаем его головой списка
             new_head->next = ml;
         else
         {
             new_head = ml;  // если память не выделилась, то голова остаётся прежней
-            free(word);  // чистим динамическую память, выделявшуюся под слово, т.к. она больше не нужна
+            free(word);  // чистим динамическую память, выделявшуюся под слово, т.к. она больше не нужна (не смогли записать слово)
         }
     }
     return new_head;
 }
 
-int* mlist_get(const MList* ml, const char* word)
+unsigned* mlist_get(const MList* ml, const char* word)
 {
-    int* word_count = NULL;
+    unsigned* word_count = NULL;
     if (word != NULL)
     {
         while (ml != NULL && word_count == NULL)
@@ -153,7 +153,7 @@ MList* mlist_remove(MList* ml, const char* word)
     return new_head;
 }
 
-void mlist_foreach_counter(MList* ml, void (*func)(int* number))
+void mlist_foreach_counter(MList* ml, void (*func)(unsigned* number))
 {
     if (func != NULL)
     {
@@ -165,7 +165,7 @@ void mlist_foreach_counter(MList* ml, void (*func)(int* number))
     }
 }
 
-void mlist_foreach_item(MList* ml, void (*func)(const char* word, int* number))
+void mlist_foreach_item(MList* ml, void (*func)(const char* word, unsigned* number))
 {
     if (func != NULL)
     {
@@ -182,7 +182,7 @@ void print_mlist(MList* ml)
     printf("-------------------------------------------\n");
     while (ml != NULL)
     {
-        printf("%s: %d\n", ml->word, ml->counter);
+        printf("%s: %u\n", ml->word, ml->counter);
         ml = ml->next;
     }
     printf("-------------------------------------------\n");

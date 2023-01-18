@@ -13,7 +13,6 @@ int main(int argc, char** argv)
 	int exit_code = EXIT_SUCCESSFULLY;
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
-
 	//printf("\n********************************************************************************************************************\n");
 	//if (argc > 1 && strcmp("help", argv[1]) != 0) // введены параметры и не требуется помощь
 	//	printf("# Настройка конфигурации программы...\n\n");
