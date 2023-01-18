@@ -18,16 +18,7 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="linked_list\ll_lib.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\linked_list_tests.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="corrector\helpful_functions.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tests\help_func_tests.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="corrector\train_module.c">
@@ -42,24 +33,24 @@
     <ClCompile Include="corrector\files_working.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hash_table\hash_table_lib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="marked_lists\marked_list_lib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\hash_table_test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\marked_list_test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="linked_list\linked_list.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linked_list\ll_lib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tests\linked_list_tests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="corrector\CorrectorModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="corrector\helpful_functions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tests\help_func_tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="corrector\train_module.h">
@@ -75,6 +66,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="corrector\files_working.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hash_table\hash_table_lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hash_table\hash_table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marked_lists\marked_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marked_lists\marked_list_lib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\hash_table_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\marked_list_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

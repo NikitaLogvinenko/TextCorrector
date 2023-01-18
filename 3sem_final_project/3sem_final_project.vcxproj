@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\tests;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\linked_list;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\corrector;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\corrector;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\marked_lists;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\hash_table;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\tests;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,10 +135,11 @@
     <ClCompile Include="corrector\helpful_functions.c" />
     <ClCompile Include="corrector\params_working.c" />
     <ClCompile Include="corrector\train_module.c" />
-    <ClCompile Include="linked_list\ll_lib.c" />
+    <ClCompile Include="hash_table\hash_table_lib.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="tests\help_func_tests.c" />
-    <ClCompile Include="tests\linked_list_tests.c" />
+    <ClCompile Include="marked_lists\marked_list_lib.c" />
+    <ClCompile Include="tests\hash_table_test.c" />
+    <ClCompile Include="tests\marked_list_test.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constants.h" />
@@ -148,10 +149,12 @@
     <ClInclude Include="corrector\helpful_functions.h" />
     <ClInclude Include="corrector\params_working.h" />
     <ClInclude Include="corrector\train_module.h" />
-    <ClInclude Include="linked_list\linked_list.h" />
-    <ClInclude Include="linked_list\ll_lib.h" />
-    <ClInclude Include="tests\help_func_tests.h" />
-    <ClInclude Include="tests\linked_list_tests.h" />
+    <ClInclude Include="hash_table\hash_table.h" />
+    <ClInclude Include="hash_table\hash_table_lib.h" />
+    <ClInclude Include="marked_lists\marked_list.h" />
+    <ClInclude Include="marked_lists\marked_list_lib.h" />
+    <ClInclude Include="tests\hash_table_test.h" />
+    <ClInclude Include="tests\marked_list_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
