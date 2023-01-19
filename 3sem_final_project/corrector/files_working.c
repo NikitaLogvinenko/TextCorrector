@@ -131,7 +131,7 @@ int read_param_from_file(FILE* file_from, char* buffer, size_t buffer_size)
 	int read_result = EXIT_SUCCESSFULLY;
 	int symbol_code = fgetc(file_from);
 	bool in_quotes = false;
-	while (isspace(symbol_code) != 0)  // пропускаем пробельные символы в начале
+	while (isspace((unsigned char)symbol_code) != 0)  // пропускаем пробельные символы в начале
 		symbol_code = fgetc(file_from);
 	if (symbol_code == (int)'"')
 	{
@@ -149,13 +149,13 @@ int read_param_from_file(FILE* file_from, char* buffer, size_t buffer_size)
 		if (in_quotes && symbol_code == (int)'"')
 			continue_reading = false;  // встречены закрывающие кавычки и были открывающие
 		else if (in_quotes == false)
-			continue_reading *= (isspace(symbol_code) == 0);  // если прочитан непробельный символ, то продолжаем чтение
+			continue_reading *= (isspace((unsigned char)symbol_code) == 0);  // если прочитан непробельный символ, то продолжаем чтение
 	}
 	// Дошли до конца файла, но не нашли закрывающую кавычку; ну что сделать, некорректный ввод!
 	if (symbol_code == EOF && in_quotes)
 		read_result = EXIT_USER_FAILURE;
 	// Заполнили весь буфер, а параметр ещё не закончился; ошибка выделения памяти!
-	else if (current_position == buffer_size - 1 && !((in_quotes && symbol_code == '"') || (!in_quotes && isspace(symbol_code))))
+	else if (current_position == buffer_size - 1 && !((in_quotes && symbol_code == '"') || (!in_quotes && isspace((unsigned char)symbol_code))))
 		read_result = EXIT_MEMORY_FAILURE;
 	// Успешно прочитали параметр! Нужно добавить нуль-терминатор строки
 	else

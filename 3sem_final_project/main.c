@@ -7,6 +7,8 @@
 #include <windows.h>
 
 #include <string.h>
+#include <ctype.h>
+#include "words_handling.h"
 
 
 int main(int argc, char** argv)
@@ -25,6 +27,24 @@ int main(int argc, char** argv)
 	strcpy(pp[2], text_name);
 	exit_code = train_new_model(pp);
 	
+	//const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
+	/*FILE* file = fopen(new_name, "w");
+	fputc(-14, file);
+	fputc(242, file);
+	fclose(file);
+	file = fopen(new_name, "r");
+	int symbol = fgetc(file);
+	while (symbol != EOF)
+	{
+		printf("%c %d %u\n", symbol, symbol, symbol);
+		symbol = fgetc(file);
+	}
+	printf("----------[%d]-------------\n", EOF);*/
+
+	
+
+
+
 	//printf("\n********************************************************************************************************************\n");
 	//if (argc > 1 && strcmp("help", argv[1]) != 0) // введены параметры и не требуется помощь
 	//	printf("# Настройка конфигурации программы...\n\n");
@@ -53,7 +73,8 @@ int main(int argc, char** argv)
 	//}
 	//delete_cfg(cfg);
 
-	//printf("\n# Программа успешно завершена. \nДонаты принимаются на карту: --CENSORED--\n\n");
+	//if (exit_code == EXIT_SUCCESSFULLY)
+	//	printf("\n# Программа успешно завершена. \nДонаты принимаются на карту: --CENSORED--\n\n");
 	//printf("Благодарим за использование нашего приложения! Оставьте свой отзыв: ");
 	//char wait = 0;
 	//scanf("%c", &wait);

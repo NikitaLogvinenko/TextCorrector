@@ -14,7 +14,6 @@
 #include "helpful_functions.h"
 #include <stdbool.h>
 #include <stdlib.h>
-#include <locale.h>
 
 
 // ѕроверить, что таблица инициализирована

@@ -255,6 +255,7 @@ static Pointer* cfg_from_params(int params_amount, const char** params_for_cfg)
 static Pointer* cfg_step_by_step()
 {
 	printf("Конфигурация работы программы не задана. Введите необходимые параметры в консоль\nПараметры можно вводить в двойных кавычках\n");
+	printf("ОБРАТИТЕ ВНИМАНИЕ, ЧТО ТЕКСТЫ И МОДЕЛИ, СОДЕРЖАЩИЕ РУССКИЕ СЛОВА, ДОЛЖНЫ ИМЕТЬ КОДИРОВКУ ANSI. Для английских слов допостима кодировка UTF-8\n");
 	// Вводим режим работы; если память под режим не выделится или режим введён не верно, то сразу же выйдем из программы (всё равно чистить пока нечего)
 	int* mode = ARV_mode(stdin, NULL);
 	Pointer* cfg = NULL;
@@ -467,7 +468,7 @@ static Pointer ARV_path_to_new_model(FILE* file_from, const char* path_to_cfg, P
 	if (file_from == stdin)
 	{
 		char* current_path = rel_to_abs_way(NULL, false, true);
-		char str_2[BUFFER_SIZE] = "\nВведите абсолютный или относительный путь для сохранения новой модели в формате path\\model_name.txt: ";
+		char str_2[BUFFER_SIZE] = "\nВведите абсолютный или относительный путь в формате path\\model_name.txt для сохранения новой модели: ";
 		ask_msg = strcat(strcat(str_1, current_path), str_2);
 		free(current_path);
 	}

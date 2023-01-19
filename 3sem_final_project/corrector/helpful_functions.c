@@ -33,8 +33,9 @@ void multiply_int(int* data, const int* multiplier)
 
 void print_help()
 {
-    printf("\t\tWARNING: ИМЕНА ФАЙЛОВ НЕ ДОЛЖНЫ СОДЕРЖАТЬ `%s`, ИНАЧЕ ОНИ МОГУТ БЫТЬ УДАЛЕНЫ!!!", TMP_SUFFIX);
-    printf("\n3sem_final_project.exe [set_cfg_way] [appropriate_params]\n");
+    printf("WARNING: ИМЕНА ФАЙЛОВ НЕ ДОЛЖНЫ СОДЕРЖАТЬ `%s`, ИНАЧЕ ОНИ МОГУТ БЫТЬ УДАЛЕНЫ!!!", TMP_SUFFIX);
+    printf("ОБРАТИТЕ ВНИМАНИЕ, ЧТО ТЕКСТЫ И МОДЕЛИ, СОДЕРЖАЩИЕ РУССКИЕ СЛОВА, ДОЛЖНЫ ИМЕТЬ КОДИРОВКУ ANSI. Для английских слов допостима кодировка UTF-8\n");
+    printf("\n\t\t3sem_final_project.exe [set_cfg_way] [appropriate_params]\n");
     printf("Все параметры вводятся через пробел. Допустимо заключать параметры в двойные кавычки\n\n");
     printf("Возможные варианты set_cfg_way:\n");
     printf("\t1. params (задать конфигурацию в параметрах)\n\t2. step_by_step (последовательно ввести конфигурацию в консоль)\n");
@@ -112,7 +113,7 @@ int read_param_from_console(char* buffer, size_t buffer_size)
         if (buffer[0] == '"' && buffer[null_term_index - 1] == '"') // кавычки в начале и в конце, удалим их
         {
             memmove(buffer, buffer + 1, null_term_index); // затёрли левую кавычку
-            --null_term_index; // обновляем инлекс нуль-терминатора, т.к. передвинули
+            --null_term_index; // обновляем индекс нуль-терминатора, т.к. передвинули
             buffer[null_term_index - 1] = '\0'; // удалили правую кавычку
         }
         if (strchr(buffer, '"') != NULL) // в параметрах ещё остались кавычки, значит пользователь некорректно ввёл параметр (кавычки нигде не предусмотрены)
@@ -157,9 +158,11 @@ void print_edit_cfg(Pointer* cfg)
     printf("\n<<<<<<<<<<<<<<<< -------------------- >>>>>>>>>>>>>>>>\n\n");
 }
 
-bool yes_no_question()
+bool yes_no_question(const char* question)
 {
-    printf("[Y]/[N]: ");
+    if (question != NULL)
+        printf("%s", question);
+    printf("\n>>>[Y-yes]/[N-no]: ");
     char ans = getchar();
     while (ans != 'Y' && ans != 'N')
     {
@@ -168,6 +171,5 @@ bool yes_no_question()
         ans = getchar();
     }
     while (getchar() != '\n');  // удалить оставшиеся в буфере символы
-    if (ans == 'Y') return true;
-    return false;
+    return (ans == 'Y') ? true : false;
 }

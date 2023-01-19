@@ -6,6 +6,7 @@
 #include "helpful_functions.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 
 int corrector_init(Corrector* corrector, unsigned max_word_length, WordsMetric metric_func)
@@ -42,4 +43,56 @@ void corrector_destroy(Corrector* corrector)
 	for (unsigned table_index = 0; table_index < corrector->max_word_length; ++table_index)
 		ht_destroy(corrector->dictionary + table_index);
 	free(corrector->dictionary);
+}
+
+int corrector_save(Corrector* corrector, FILE* model_file)
+{
+	int exit_code = EXIT_SUCCESSFULLY;
+	if (not_null_ptr(model_file, "Не удалось открыть файл для сохранения. Попробуйте ещё раз или измените путь к файлу\n"))
+	{
+		if (corrector != NULL)
+		{
+			fprintf(model_file, "max_word_length=%d\n", corrector->max_word_length);
+			for (unsigned table_index = 0; table_index < corrector->max_word_length; ++table_index)
+			{
+				HashTable* current_table = corrector->dictionary + table_index;
+				char table_name[LONGEST_TABLE_NAME];
+				sprintf(table_name, "table_%u", table_index + 1);
+				fprint_ht(model_file, current_table, table_name);
+			}
+		}
+		fclose(model_file);
+	}
+	else
+		exit_code = EXIT_FILE_FAILURE;
+	return exit_code;
+}
+
+void corrector_learn(Corrector* corrector, const char* word)
+{
+	if (corrector != NULL && word != NULL)
+	{
+		unsigned word_length = strlen(word);
+		if (word_length <= corrector->max_word_length)
+		{
+			HashTable* same_length_words = corrector->dictionary + word_length - 1;
+			ht_set(same_length_words, word, 1);
+		}
+	}
+}
+
+int corrector_load(Corrector* corrector, FILE* model_file)//---------------------------------------------------------------------------------------------
+{
+	int exit_code = EXIT_SUCCESSFULLY;
+	if (not_null_ptr(model_file, "Не удалось открыть файл для загрузки модели. Попробуйте ещё раз или измените путь к файлу\n"))
+	{
+		if (corrector != NULL)
+		{
+			int a;
+		}
+		fclose(model_file);
+	}
+	else
+		exit_code = EXIT_FILE_FAILURE;
+	return exit_code;
 }
