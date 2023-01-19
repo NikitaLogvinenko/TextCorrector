@@ -45,6 +45,12 @@
     <ClCompile Include="tests\marked_list_test.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="corrector\words_handling.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="corrector\corrector_lib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="corrector\CorrectorModel.h">
@@ -84,6 +90,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="tests\marked_list_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\words_handling.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="corrector\corrector_lib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,8 +4,9 @@
 #include "train_module.h"
 #include "edit_module.h"
 #include <stdio.h>
-#include <locale.h>
 #include <windows.h>
+
+#include <string.h>
 
 
 int main(int argc, char** argv)
@@ -13,6 +14,17 @@ int main(int argc, char** argv)
 	int exit_code = EXIT_SUCCESSFULLY;
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
+	Pointer* pp = empty_pointers_array(4);
+	const char* model_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
+	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\text_for_learning.txt";
+	pp[1] = malloc(sizeof(char) * (strlen(model_name) + 1));
+	pp[2] = malloc(sizeof(char) * (strlen(text_name) + 1));
+	pp[3] = malloc(sizeof(int));
+	*(int*)pp[3] = 10;
+	strcpy(pp[1], model_name);
+	strcpy(pp[2], text_name);
+	exit_code = train_new_model(pp);
+	
 	//printf("\n********************************************************************************************************************\n");
 	//if (argc > 1 && strcmp("help", argv[1]) != 0) // введены параметры и не требуется помощь
 	//	printf("# Настройка конфигурации программы...\n\n");

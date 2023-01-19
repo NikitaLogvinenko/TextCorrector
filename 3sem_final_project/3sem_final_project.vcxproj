@@ -130,11 +130,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="corrector\corrector_lib.c" />
     <ClCompile Include="corrector\edit_module.c" />
     <ClCompile Include="corrector\files_working.c" />
     <ClCompile Include="corrector\helpful_functions.c" />
     <ClCompile Include="corrector\params_working.c" />
     <ClCompile Include="corrector\train_module.c" />
+    <ClCompile Include="corrector\words_handling.c" />
     <ClCompile Include="hash_table\hash_table_lib.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="marked_lists\marked_list_lib.c" />
@@ -144,11 +146,13 @@
   <ItemGroup>
     <ClInclude Include="constants.h" />
     <ClInclude Include="corrector\CorrectorModel.h" />
+    <ClInclude Include="corrector\corrector_lib.h" />
     <ClInclude Include="corrector\edit_module.h" />
     <ClInclude Include="corrector\files_working.h" />
     <ClInclude Include="corrector\helpful_functions.h" />
     <ClInclude Include="corrector\params_working.h" />
     <ClInclude Include="corrector\train_module.h" />
+    <ClInclude Include="corrector\words_handling.h" />
     <ClInclude Include="hash_table\hash_table.h" />
     <ClInclude Include="hash_table\hash_table_lib.h" />
     <ClInclude Include="marked_lists\marked_list.h" />

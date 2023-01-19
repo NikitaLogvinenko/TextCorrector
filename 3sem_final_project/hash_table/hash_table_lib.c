@@ -46,7 +46,7 @@ unsigned jenkins_one_at_a_time_hash(const char* key)
 
 int ht_init(HashTable* ht, unsigned size, HashFunction hf)
 {
-    int func_res = 0;
+    int func_res = EXIT_SUCCESSFULLY;
 
     if (not_null_ptr(ht, "Невозможно инициализировать таблицу по указателю NULL\n"))
     {
@@ -67,7 +67,7 @@ int ht_init(HashTable* ht, unsigned size, HashFunction hf)
                 ht->hashfunc = hf;
             }
             else
-                func_res = -1;
+                func_res = EXIT_MEMORY_FAILURE;
         }
     }
     return func_res;
