@@ -1,11 +1,3 @@
-#define NULL_KEY_ERROR -2
-#define NOT_INITIALISED_TABLE -1
-#define WRITING_FAILED -1
-#define SUCCESSFULLY_WRITTEN 0
-#define WRDS_EXCEED 10
-#define HT_INCRS 2
-
-
 #include "constants.h"
 #include "marked_list.h"
 #include "marked_list_lib.h"
@@ -19,7 +11,7 @@
 // Проверить, что таблица инициализирована
 static bool table_was_initialised(HashTable* ht);
 
-// Получить индекс списка, в котором должен быть ключ word; если таблица не инициализирована - вернуть -1, если word=NULL - вернуть -2
+// Получить индекс списка, в котором должен быть ключ word; если таблица не инициализирована или word=NULL - вернёт EXIT_INDEX_FAILURE, который <0
 // Хеш-функция возвращает нам различные значения, но нам нужно поместить слово в конечную таблицу. Следовательно, от хеша надо взять остаток от деления на размер таблицы
 static int get_list_index(HashTable* ht, const char* word);
 
@@ -87,29 +79,41 @@ void ht_destroy(HashTable* ht)
     }
 }
 
-void ht_set(HashTable* ht, const char* word, unsigned counter)
+int ht_set(HashTable* ht, const char* word, unsigned counter)
 {
+    int exit_code = EXIT_SUCCESSFULLY;
     if (table_was_initialised(ht) == false)
-        printf("Таблица для вставки слова не инициализирована\n");
-
-    else if (word == NULL)
-        printf("Некорректный ключ для вставки в таблицу!\n");
-
-    else
     {
-        if (ht_has(ht, word) == false)  // если это новое слово, то надо увеличить счётчик слов в таблице
-        {
-            ht->total_words += 1;
-            if (ht->total_words >= ht->size * WRDS_EXCEED)  // слишком много слов в таблице, возможны длинные коллизии, увеличим количество строк в таблице
-                ht_resize(ht, ht->size * HT_INCRS);
-        }
-        unsigned list_index = get_list_index(ht, word);  // индекс нужного списка
-        if (ht->table[list_index] == NULL)  // в этой позиции в таблице список ещё не создан, создаём новый (а значит и слово это раньше не встречалось)
-            ht->table[list_index] = mlist_create(word, counter);
-
-        else  // список в таблице уже существует, добавляем в него word (если слово уже было в списке до этого, это всё решается внутри mlist_add
-            ht->table[list_index] = mlist_add(ht->table[list_index], word, counter);
+        printf("Таблица для вставки слова не инициализирована\n");
+        exit_code = EXIT_USER_FAILURE;
     }
+
+    else if (not_null_ptr(word, "Некорректный ключ для вставки в таблицу!\n") == false)
+        exit_code = EXIT_USER_FAILURE;
+
+    else  // указатели на таблицу и слово ненулевые и таблица уже содержит какое-то количество строк
+    {
+        if (ht_has(ht, word) == false)  // добавляем новое слово
+        {
+            ht->total_words += 1;  // увеличиваем счётчик уникальных слов
+            if (ht->total_words >= ht->size * WRDS_EXCEED)  // вместе с новым словом будет слишком много слов, то надо увеличить таблицу
+                ht_resize(ht, ht->size * HT_INCRS); // если вдруг таблица не увеличится, просто останется старая таблица и добавление будет осуществлено в неё
+        }
+
+        int list_index = get_list_index(ht, word);  // индекс нужного списка для вставки/обновления слова
+        if (ht->table[list_index] == NULL)  // в этой позиции в таблице список ещё не создан (а значит и слово это раньше не встречалось), создаём новый
+            ht->table[list_index] = mlist_create(word, counter);
+        else  // список в таблице уже существует, добавляем в него word
+            ht->table[list_index] = mlist_add(ht->table[list_index], word, counter);
+        exit_code = NEW_WORD_ADDED;  // если слово было добавлено или уже существовало NEW_WORD_ADDED = EXIT_SUCCESSFULLY, иначе NEW_WORD_ADDED = EXIT_MEMORY_FAILURE (слово не добавилось)
+        if (exit_code == EXIT_MEMORY_FAILURE)
+        {
+            NEW_WORD_ADDED = EXIT_SUCCESSFULLY;  // уже воспользовались информацией, что память не выделилась; убираем флаг ошибки памяти
+            ht->total_words -= 1;  // т.к. поспешили прибавить 1, а новое слово не добавили
+        }
+    }
+
+    return exit_code;
 }
 
 unsigned* ht_get(const HashTable* ht, const char* word)
@@ -126,15 +130,24 @@ bool ht_has(const HashTable* ht, const char* word)
     return mlist_has(ml_for_word, word);
 }
 
-void ht_delete(HashTable* ht, const char* word)
+int ht_delete(HashTable* ht, const char* word)
 {
+    int exit_code = EXIT_SUCCESSFULLY;
     int list_index = get_list_index(ht, word);
     if (list_index >= 0)
     {
         MList* removed_elem = mlist_find(ht->table[list_index], word);
         if (removed_elem != NULL)
+        {
             ht->table[list_index] = mlist_remove(ht->table[list_index], word);
+            ht->total_words -= 1;
+        }
+        else
+            exit_code = EXIT_ABSENT;
     }
+    else
+        exit_code = EXIT_USER_FAILURE;
+    return exit_code;
 }
 
 void ht_traverse(HashTable* ht, void (*func)(const char* word, unsigned* counter))
@@ -152,22 +165,35 @@ void ht_traverse(HashTable* ht, void (*func)(const char* word, unsigned* counter
     }
 }
 
-void ht_resize(HashTable* ht, unsigned new_size)
+int ht_resize(HashTable* ht, int new_size)
 {
+    int exit_code = EXIT_SUCCESSFULLY;
     if (table_was_initialised(ht) == false)
+    {
         printf("Попытка изменения размера неинициализированной таблицы\n");
+        exit_code = EXIT_USER_FAILURE;
+    }
 
     else if (new_size < 1)
-        printf("Попытка создания пустой таблицы\n");
-
-    MList** new_table = (MList**)retry_malloc(sizeof(MList*) * new_size, MAX_MALLOC_ATTEMPTS);
-    if (not_null_ptr(ht->table, "Ошибка выделения памяти под таблицу. Изменение размера таблицы не состоялось\n"))
     {
-        displace_table(ht->hashfunc, new_table, new_size, ht->table, ht->size);  // перемещаем записи из старой таблицы в новую
-        free(ht->table);  // удаляем старые указатели (под них выделялась динамическая память)
-        ht->table = new_table;  // указываем на новую таблицу
-        ht->size = new_size;  // меняем размер таблицы
+        printf("Попытка создания пустой таблицы\n");
+        exit_code = EXIT_USER_FAILURE;
     }
+
+    else
+    {
+        MList** new_table = (MList**)retry_malloc(sizeof(MList*) * new_size, MAX_MALLOC_ATTEMPTS);
+        if (not_null_ptr(new_table, "Ошибка выделения памяти под таблицу. Размер таблицы остаётся прежним\n"))
+        {
+            displace_table(ht->hashfunc, new_table, new_size, ht->table, ht->size);  // перемещаем записи из старой таблицы в новую
+            free(ht->table);  // удаляем старые указатели (под них выделялась динамическая память)
+            ht->table = new_table;  // указываем на новую таблицу
+            ht->size = new_size;  // меняем размер таблицы
+        }
+        else
+            exit_code = EXIT_MEMORY_FAILURE;
+    }
+    return exit_code;
 }
 
 void fprint_ht(FILE* opened_file, HashTable* ht, const char* table_name)
@@ -204,10 +230,11 @@ static bool table_was_initialised(HashTable* ht)
 static int get_list_index(HashTable* ht, const char* word)
 {
     int index = 0;
-    if (table_was_initialised(ht) == false)
-        index = NOT_INITIALISED_TABLE;
-    else if (word == NULL)
-        index = NULL_KEY_ERROR;
+    if (table_was_initialised(ht) == false || word == NULL)
+    {
+        printf("Не удаётся провести поиск слова в таблице. Таблица не инициализирована или указатель на слово равен NULL\n");
+        index = EXIT_INDEX_FAILURE;
+    }
     else
         index = ht->hashfunc(word) % ht->size;
     return index;

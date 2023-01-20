@@ -14,16 +14,18 @@
 // В случае успешного обучения возвращает EXIT_SUCCESSFULLY, иначе EXIT_FILE_FAILURE (не открылся какой-то из файлов) или EXIT_USER_FAILURE (пользователь неправильно ввёл имя текста)
 static int train_initialized(Corrector* corrector, const Pointer* cfg);
 
-// Обучить ИНИЦИАЛИЗИРОВАННЫЙ корректор словам из ОТКРЫТОГО файла text_file. По окончании обучения закрывает файл
-// В случае успешного обучения возвращает EXIT_SUCCESSFULLY, иначе EXIT_FILE_FAILURE (не открылся файл)
-static int train_one_file(Corrector* corrector, FILE* text_file);
+// Обучить ИНИЦИАЛИЗИРОВАННЫЙ корректор словам из файла text_file_name. По окончании обучения закрывает файл
+// В случае успешного обучения возвращает EXIT_SUCCESSFULLY
+// Если text_file_name не является путём к файлу .txt - вернёт EXIT_USER_FAILURE
+// Если не открылся файл - вернёт EXIT_FILE_FAILURE
+static int train_one_file(Corrector* corrector, const char* text_file_name);
 
 /*=================================================================================================================================================================================*/
 
 int train_new_model(const Pointer* cfg)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
-	printf("\n###Обучение новой модели...\n");
+	printf("\n### Обучение новой модели...\n");
 	Corrector new_corrector;
 	unsigned max_word_length = *(int*)cfg[3];
 	exit_code = corrector_init(&new_corrector, max_word_length, NULL);  // инициализируем корректор, выделяем память под таблицы
@@ -34,14 +36,19 @@ int train_new_model(const Pointer* cfg)
 	return exit_code;
 }
 
-int train_existed_model(const Pointer* cfg)//---------------------------------------------------------------------------------------------
+int train_existed_model(const Pointer* cfg)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
-	printf("\n###Дообучение существующей модели...\n");
-	// Создать модель, открыть файл с моделью, прочитать максимальную длину, инициализировать таблицу, загрузить изученные слова, закрыть файл
-	// Вызвать train_inizialized с конфигом cfg, разве что в инициализированной модели уже будут слова
-
-
+	printf("\n### Загрузка существующей модели...\n");
+	Corrector existed_corrector;
+	const char* model_file_name = (const char*)cfg[1];
+	exit_code = corrector_load(&existed_corrector, model_file_name);  // загружаем существующую модель из файла; если не сможем загрузить, то вся прочитанная память очищается внутри
+	if (exit_code == EXIT_SUCCESSFULLY)
+	{
+		printf("\n### Загрузка успешно завершена\n### Дообучение существующей модели...\n");
+		exit_code = train_initialized(&existed_corrector, cfg);
+	}
+	
 	return exit_code;
 }
 
@@ -51,8 +58,7 @@ static int train_initialized(Corrector* corrector, const Pointer* cfg)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
 	const char* model_file_name = (const char*)cfg[1], * text_file_name = (const char*)cfg[2];
-	FILE* text_file = fopen(text_file_name, "r");
-	exit_code = train_one_file(corrector, text_file);  // проверка, что файл открылся, а также закрытие файла происходит внутри
+	exit_code = train_one_file(corrector, text_file_name);
 	
 	while (exit_code == EXIT_SUCCESSFULLY && yes_no_question("\nТекст изучен. Дообучить модель ещё на одном тексте?\n"))
 	{
@@ -60,51 +66,54 @@ static int train_initialized(Corrector* corrector, const Pointer* cfg)
 		printf("Введите полный или относительный путь к тексту для обучения в формате path\\file_name.txt: ");
 		char text_file_name[BUFFER_SIZE];
 		read_param_from_console(text_file_name, BUFFER_SIZE);
-		if (path_is_txt(text_file_name))  // новый введённый путь - действительно путь к файлу .txt
-		{
-			FILE* text_file = fopen(text_file_name, "r");
-			exit_code = train_one_file(corrector, text_file);
-		}
-		else
-		{
-			printf("Неверно введён путь. Обучение прервано\n");
-			exit_code = EXIT_USER_FAILURE;
-		}
+		exit_code = train_one_file(corrector, text_file_name);
 	}
 	
 	if (exit_code != EXIT_SUCCESSFULLY)  // на каком-то этапе произошла ошибка, не сохраняем модель (если это новая модель - будет пустой файл, если старая, то файл не изменится)
 		printf("Сожалеем, на этапе обучения произошла ошибка. Модель останется в том состоянии, в котором была до обучения. Повторите попытку\n");
 	else  // сохраняем модель
 	{
-		FILE* model_file = fopen(model_file_name, "w");  // перезаписываем модель
-		exit_code = corrector_save(corrector, model_file);  // проверка открытия и закрытие файла модели происходят внутри
+		printf("\n### Обучение завершено\n### Сохранение модели в файл...\n");
+		exit_code = corrector_save(corrector, model_file_name);
 		if (exit_code != EXIT_SUCCESSFULLY)
-			printf("Ошибка при сохранении модели. Модель отныне не работает. Обучите новую. Приносим свои извинения!\n");
+			printf("Ошибка при сохранении модели. Модель больше не работает. Обучите новую. Приносим свои извинения!\n");
+		else
+			printf("\n### Модель успешно сохранена!\n");
 	}
-
 	corrector_destroy(corrector);  // чистим память, выделенную под таблицы и слова
-	printf("\n###Обучение завершено\n");
 	return exit_code;
 }
 
-static int train_one_file(Corrector* corrector, FILE* text_file)
+static int train_one_file(Corrector* corrector, const char* text_file_name)
 {
 	int exit_code = EXIT_SUCCESSFULLY;
-	if (not_null_ptr(text_file, "Не удалось открыть файл для обучения\n"))
+	FILE* text_file = NULL;
+	if (path_is_txt(text_file_name))  // новый введённый путь - действительно путь к файлу .txt
+		text_file = fopen(text_file_name, "r");
+	else
 	{
-		char buffer_for_word[MAX_AVAILABLE_WORD_LENGTH + 1];  // +1, т.к. нужно вставить '\0'
+		printf("Неверно введён путь к обучающему тексту. Обучение прервано\n");
+		exit_code = EXIT_USER_FAILURE;
+	}
+
+	if (exit_code == EXIT_SUCCESSFULLY && not_null_ptr(text_file, "Не удалось открыть файл для обучения\n"))  // открыли файл
+	{
+		char buffer_for_word[MAX_AVAILABLE_WORD_LENGTH + 1];  // буфер, чтобы считать слово из текста; +1, т.к. нужно вставить '\0' в конце
 		bool file_not_ended = true;
 		char* learning_word = NULL;
+		int memory_failures = 0;  // счётчик, сколько слов не смогли вставить
 		while (file_not_ended)
 		{
 			file_not_ended = read_train_word(text_file, buffer_for_word, corrector->max_word_length);
 			learning_word = prepare_train_word(buffer_for_word);
 			if (learning_word != NULL)  // слово подходит для изучения, запоминаем его, устанавливаем/обновляем счётчик
-				corrector_learn(corrector, learning_word);
+				memory_failures += (corrector_learn(corrector, learning_word) == EXIT_MEMORY_FAILURE) ? 1 : 0;
 		}
+		if (memory_failures != 0)  // выучены не все слова, модель будет работать, но не на всём наборе слов
+			printf("Не удалось выделить память для %d слов. Модель будет работать на остальных словах, но рекомендуем Вам повторить обучение\n", memory_failures);
 		fclose(text_file);
 	}
-	else
+	else  // файл не открылся
 		exit_code = EXIT_FILE_FAILURE;
 	return exit_code;
 }

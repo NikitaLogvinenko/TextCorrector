@@ -1,6 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
-
 #include "constants.h"
 #include "marked_list.h"
 #include "marked_list_lib.h"
@@ -10,6 +7,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+// Индикатор того, что новое слово вставилось в связный список
+// Значение EXIT_SUCCESSFULLY - слово вставилось (или оно уже было), значение EXIT_MEMORY_FAILURE - слово не вставилось (ошибка памяти при создании нового узла)
+int NEW_WORD_ADDED = EXIT_SUCCESSFULLY;
 
 
 MList* mlist_create(const char* word, unsigned counter)  // предполагается, что память под MList выделяется только динамически
@@ -24,6 +25,8 @@ MList* mlist_create(const char* word, unsigned counter)  // предполагается, что 
             new_ml->counter = counter;
             new_ml->next = NULL;
         }
+        else
+            NEW_WORD_ADDED = EXIT_MEMORY_FAILURE;
     }
     return new_ml;
 }
@@ -70,6 +73,7 @@ MList* mlist_add(MList* ml, const char* word, unsigned counter)
         {
             new_head = ml;  // если память не выделилась, то голова остаётся прежней
             free(word);  // чистим динамическую память, выделявшуюся под слово, т.к. она больше не нужна (не смогли записать слово)
+            NEW_WORD_ADDED = EXIT_MEMORY_FAILURE;
         }
     }
     return new_head;

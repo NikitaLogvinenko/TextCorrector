@@ -63,21 +63,21 @@ void hash_table_test()
 		strcpy(word14, "Слово14");
 	// Добавим несколько слов в таблицу
 	unsigned c1 = 1, c2 = 1, c3 = 1, c4 = 3, c5 = 10, c6 = 2, c7 = 7, c8 = 0, c9 = 1, c10 = 10, c11 = 11, c12 = 12, c13 = 13, c14 = 14;
-	ht_set(&ht, word1, c1);
-	ht_set(&ht, word2, c2);
-	ht_set(&ht, word3, c3);
+	assert(ht_set(&ht, word1, c1) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word2, c2) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word3, c3) == EXIT_SUCCESSFULLY);
 	// Добавим повторяющиеся слова и ещё несколько новых
-	ht_set(&ht, word4, c4);
-	ht_set(&ht, word5, c5);
-	ht_set(&ht, word6, c6);
-	ht_set(&ht, word7, c7);
-	ht_set(&ht, word8, c8);
-	ht_set(&ht, word9, c9);
-	ht_set(&ht, word10, c10);
-	ht_set(&ht, word11, c11);
-	ht_set(&ht, word12, c12);
-	ht_set(&ht, word13, c13);
-	ht_set(&ht, word14, c14);
+	assert(ht_set(&ht, word4, c4) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word5, c5) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word6, c6) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word7, c7) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word8, c8) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word9, c9) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word10, c10) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word11, c11) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word12, c12) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word13, c13) == EXIT_SUCCESSFULLY);
+	assert(ht_set(&ht, word14, c14) == EXIT_SUCCESSFULLY);
 	fprint_ht(stdout, &ht, "----test_table_initial----");
 	// Проверим функцию вхождения слова в таблицу
 	assert(ht_has(&ht, "Слово1"));
@@ -89,14 +89,14 @@ void hash_table_test()
 	assert(*ht_get(&ht, "Слово2") == c2 + c6);
 	assert(*ht_get(&ht, "Слово7") == c7);
 	// удалим Слово0 и Слово2, а также несуществующих слово0 и Слово20
-	ht_delete(&ht, "Слово0");
-	ht_delete(&ht, "Слово2");
-	ht_delete(&ht, "Слово20");
-	ht_delete(&ht, "слово0");
+	assert(ht_delete(&ht, "Слово0") == EXIT_SUCCESSFULLY);
+	assert(ht_delete(&ht, "Слово2") == EXIT_SUCCESSFULLY);
+	assert(ht_delete(&ht, "Слово20") == EXIT_ABSENT);
+	assert(ht_delete(&ht, "слово0") == EXIT_ABSENT);
 	assert(!ht_has(&ht, "Слово2"));
 	assert(!ht_has(&ht, "Слово0"));
 	// увеличим таблицу
-	ht_resize(&ht, ht.size * 2);
+	assert(ht_resize(&ht, ht.size * 2) == EXIT_SUCCESSFULLY);
 	// увеличим все значения на 1
 	ht_traverse(&ht, add_one);
 	assert(*ht_get(&ht, "Слово7") == c7 + 1);

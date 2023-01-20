@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "words_handling.h"
+#include "hash_table_test.h"
 
 
 int main(int argc, char** argv)
@@ -18,14 +19,14 @@ int main(int argc, char** argv)
 	SetConsoleOutputCP(1251);
 	Pointer* pp = empty_pointers_array(4);
 	const char* model_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
-	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\text_for_learning.txt";
+	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\texts\\Иван Гончаров - Обломов.txt";
 	pp[1] = malloc(sizeof(char) * (strlen(model_name) + 1));
 	pp[2] = malloc(sizeof(char) * (strlen(text_name) + 1));
 	pp[3] = malloc(sizeof(int));
 	*(int*)pp[3] = 10;
 	strcpy(pp[1], model_name);
 	strcpy(pp[2], text_name);
-	exit_code = train_new_model(pp);
+	exit_code = train_existed_model(pp);
 	
 	//const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
 	/*FILE* file = fopen(new_name, "w");

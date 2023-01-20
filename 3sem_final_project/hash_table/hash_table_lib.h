@@ -3,6 +3,7 @@
 
 
 #include "hash_table.h"
+#include "marked_list.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -12,10 +13,11 @@ unsigned jenkins_one_at_a_time_hash(const char* key);
 
 // Инициализировать таблицу.
 // Таблица уже должна быть создана! Мы только инициализируем её
-// size - размер базового массива;
+// size - число строк в таблице;
 // hf   - хеш-функция;
 // Если hf=NULL, берется стандартная функция (Дженкинса).
-// Возвращает EXIT_SUCCESSFULLY в случае успешной инициализации. В случае проблем с выделением памяти под строки возвращает EXIT_MEMORY_FAILURE
+// Возвращает EXIT_SUCCESSFULLY в случае успешной инициализации
+// В случае проблем с выделением памяти под строки возвращает EXIT_MEMORY_FAILURE
 int ht_init(HashTable* ht, unsigned size, HashFunction hf);
 
 // Уничтожить таблицу
@@ -26,22 +28,30 @@ void ht_destroy(HashTable* ht);
 // Если в таблице становится слишком много слов, то сначала таблица увеличивается в несколько раз, чтобы уменьшит число коллизий (для более быстрого поиска в дальнейшем)
 // Порог, во сколько раз количество слов должно превышать количество строк в таблице, чтобы началось её расширение, задан через #define WRDS_EXCEED
 // Во сколько раз увеличивать таблицу задано через #define HT_INCRS
-void ht_set(HashTable* ht, const char* word, unsigned counter);
+// Если слово записалось  - вернёт EXIT_SUCCESSFULLY.
+// Если не выделилась память под новое слово - вернёт EXIT_MEMORY_FAILURE, а таблица останется прежней
+// Если слово не записалось, потому что не инициализирована таблица или передан указатель NULL вместо слова, то вернёт EXIT_USER_FAILURE
+int ht_set(HashTable* ht, const char* word, unsigned counter);
 
 // Получить УКАЗАТЕЛЬ на счётчик слова. Если слова нет в таблице, вернуть NULL
+// Весь узел связного списка не возвращается в целях безопасности, т.к. он может указывать на последующие узлы, которые можно повредить в результате неаккуратной работы с текущим
 unsigned* ht_get(const HashTable* ht, const char* word);
 
 // Проверка существования ключа word в таблице
 bool ht_has(const HashTable* ht, const char* word);
 
-// Удалить элемент с ключом word из таблицы (если он есть)
-void ht_delete(HashTable* ht, const char* word);
+// Удалить элемент с ключом word из таблицы (если он есть). Если элемент был удалён - вернуть EXIT_SUCCESSFULLY
+// Если элемента не было - вернуть EXIT_ABSENT. Если таблица не инициализирована или указатель на слово равен NULL - вернуть EXIT_USER_FAILURE
+int ht_delete(HashTable* ht, const char* word);
 
 //  Обход таблицы с посещением всех элементов. Функция func будет вызвана для всех пар (word, counter) из таблицы. Ключ менять нельзя!
 void ht_traverse(HashTable* ht, void (*func)(const char* word, unsigned* counter));
 
 // Изменить размер базового массива
-void ht_resize(HashTable* ht, unsigned new_size);
+// Вернёт EXIT_SUCCESSFULLY, если размер успешно изменён
+// Если не выделилась память под новую таблицу, то таблица остаётся прежней и возвращается EXIT_MEMORY_FAILURE
+// Если таблица неинициализирована или new_size<1, вернёт EXIT_USER_FAILURE
+int ht_resize(HashTable* ht, int new_size);
 
 // Записать таблицу в открытый файл opened_file. Формат записи:
 // <table_name> size=size_of_the_table total_words=total_amount_of_words_in_the_table
