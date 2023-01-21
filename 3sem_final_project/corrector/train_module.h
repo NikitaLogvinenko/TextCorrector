@@ -6,11 +6,17 @@
 
 
 // Обучает новую модель в соответствии с конфигом и сохраняет её в файл.
-// Возвращает EXIT_SUCCESSFULLY в случае успешного исполнения, иначе код ошибки
+// Возвращает EXIT_SUCCESSFULLY в случае успешного исполнения, иначе код ошибки:
+// * EXIT_MEMORY_FAILURE - не выделилась память
+// * EXIT_FILE_FAILURE - не открылся файл
+// * EXIT_USER_FILE - ошибка по вине пользователя
 int train_new_model(const Pointer* cfg);
 
 // Дообучает существующую модель в соответствии с конфигом и сохраняет изменения.
-// Возвращает EXIT_SUCCESSFULLY в случае успешного исполнения, иначе код ошибки (EXIT_MEMORY_FAILURE - не выделилась память, EXIT_FILE_FAILURE - не открылся файл)
+// Возвращает EXIT_SUCCESSFULLY в случае успешного исполнения, иначе код ошибки:
+// * EXIT_MEMORY_FAILURE - не выделилась память
+// * EXIT_FILE_FAILURE - не открылся файл
+// * EXIT_USER_FILE - ошибка по вине пользователя
 int train_existed_model(const Pointer* cfg);
 
 

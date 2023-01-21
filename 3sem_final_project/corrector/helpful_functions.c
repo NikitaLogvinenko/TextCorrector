@@ -104,6 +104,7 @@ int read_param_from_console(char* buffer, size_t buffer_size)
     if (null_term_index == buffer_size - 1 && buffer[null_term_index - 1] != '\n') // не хватило буфера (последний - '\0', а предпоследний не '\n')
     {
         read_result = EXIT_MEMORY_FAILURE;
+        printf("Не удалось считать параметр с консоли. Текст слишком длинный\n");
         clear_buff();
     }
     else

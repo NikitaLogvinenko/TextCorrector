@@ -5,7 +5,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <assert.h>
 
 
 unsigned hamming_distance(const char* word1, const char* word2)
@@ -82,11 +81,11 @@ int letter_to_upper(int code)
 {
 	int uppered_symbol_code = code;
 	if (is_lower_letter_eng(code))
-		uppered_symbol_code = uppered_symbol_code - FIRST_ENG_LOWER + FIRST_ENG_CAPITAL;
-	else if (code == YO_LOWER)
-		uppered_symbol_code = YO_CAPITAL;
+		uppered_symbol_code = uppered_symbol_code - 'a' + 'A';
+	else if (code < 0 && code == 'ё' || code >= 0 && code == (unsigned char)'ё')
+		uppered_symbol_code = (char)'Ё';
 	else if (is_lower_letter_rus(code))
-		uppered_symbol_code = uppered_symbol_code - FIRST_RUS_LOWER + FIRST_RUS_CAPITAL;
+		uppered_symbol_code = uppered_symbol_code - 'а' + 'А';
 	return uppered_symbol_code;
 }
 
@@ -94,11 +93,11 @@ int letter_to_lower(int code)
 {
 	int lowered_symbol_code = code;
 	if (is_upper_letter_eng(code))
-		lowered_symbol_code = lowered_symbol_code - FIRST_ENG_CAPITAL + FIRST_ENG_LOWER;
-	else if (code == YO_CAPITAL)
-		lowered_symbol_code = YO_LOWER;
+		lowered_symbol_code = lowered_symbol_code - 'A' + 'a';
+	else if (code < 0 && code == 'Ё' || code >= 0 && code == (unsigned char)'Ё')
+		lowered_symbol_code = (char)'ё';
 	else if (is_upper_letter_rus(code))
-		lowered_symbol_code = lowered_symbol_code - FIRST_RUS_CAPITAL + FIRST_RUS_LOWER;
+		lowered_symbol_code = lowered_symbol_code - 'А' + 'а';
 	return lowered_symbol_code;
 }
 
@@ -129,76 +128,26 @@ bool is_lower_letter(int code)
 
 bool is_upper_letter_eng(int code)
 {
-	return (code >= FIRST_ENG_CAPITAL && code <= LAST_ENG_CAPITAL);
+	code = signed_to_unsigned_char(code);
+	return (code >= (unsigned char)'A' && code <= (unsigned char)'Z');
 }
 
 bool is_lower_letter_eng(int code)
 {
-	return (code >= FIRST_ENG_LOWER && code <= LAST_ENG_LOWER);
+	code = signed_to_unsigned_char(code);
+	return (code >= (unsigned char)'a' && code <= (unsigned char)'z');
 }
 
 bool is_upper_letter_rus(int code)
 {
-	return (code >= FIRST_RUS_CAPITAL && code <= LAST_RUS_CAPITAL || code == YO_CAPITAL);
+	code = signed_to_unsigned_char(code);
+	return (code >= (unsigned char)'А' && code <= (unsigned char)'Я' || code == (unsigned char)'Ё');
 }
 
 bool is_lower_letter_rus(int code)
 {
-	return (code >= FIRST_RUS_LOWER && code <= LAST_RUS_LOWER || code == YO_LOWER);
-}
-
-bool read_train_word(FILE* text_file, char* buffer, unsigned max_word_length)
-{
-	assert(max_word_length != 0);
-	// проверка, что файл открыт, выполнена ранее, в train_one_file, откуда и вызывается функция read_train_word
-	bool file_not_ended = true;
-	int new_symbol = fgetc(text_file);  // fgetc возвращает от 0 до 255, т.е. для unsigned char. В случае конца файла возвращает -1. А обычные char записываются от -128 до 127
-	while (new_symbol != EOF && (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0))  // а вот функции из модуля <ctype.h> работают с unsigned char
-		new_symbol = fgetc(text_file);  // пропускаем все пробельные символы и знаки препинания, пока не встретим букву или конец файла
-
-	if (new_symbol == EOF)  // дошли до конца файла и не встретили слово
-	{
-		buffer[0] = '\0';
-		file_not_ended = false;
-	}
-	else  // нашли слово
-	{
-		int counter = 0;
-		while (counter < max_word_length && new_symbol != EOF && isspace(new_symbol) == 0 && ispunct(new_symbol) == 0 || new_symbol == (int)'-')
-		{
-			// записываем новые символы в буфер, пока не превысим лимит или пока не встретим пробельный или пунктуационный символ или конец файла
-			buffer[0] = new_symbol;
-			++counter;
-			++buffer;
-			new_symbol = fgetc(text_file);
-		}
-		
-		if (new_symbol == EOF)  // дошли до конца файла
-		{
-			file_not_ended = false;
-			buffer[0] = '\0';
-		}
-		
-		else if (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0)  // целиком прочитали слово
-			buffer[0] = '\0';
-		
-		else  // превышен лимит по буквам, зануляем всё слово и пропускаем оставшиеся символы до пробельного
-		{
-			*(buffer - max_word_length) = '\0';
-			while (isspace(new_symbol) == 0)
-			{
-				new_symbol = fgetc(text_file);
-				if (new_symbol == EOF)
-				{
-					file_not_ended = false;
-					new_symbol = (unsigned char)' ';
-				}
-					
-			}
-		}
-	}
-
-	return file_not_ended;
+	code = signed_to_unsigned_char(code);
+	return (code >= (unsigned char)'а' && code <= (unsigned char)'я' || code == (unsigned char)'ё');
 }
 
 const char* prepare_train_word(const char* word)
@@ -242,4 +191,33 @@ int letters_and_hyphens_in_word(const char* word)
 		}
 	}
 	return counter;
+}
+
+bool space_demanding(int symbol_code)
+{
+	bool demanding = true;
+	if (symbol_code < 0 && symbol_code != EOF)  // в функцию должны передаваться unsigned char, но получили отрицательный код не EOF - поставим пробел на всякий случай
+		demanding = true;
+	else if (symbol_code == EOF || isspace(symbol_code) != 0)  // EOF и пробельные символы не требуют после себя ещё одного пробела
+		demanding = false;
+	else  // также не требуют пробел некоторые другие символы
+	{
+		unsigned char not_demanding[NOT_DEMANDING_SPACE] = { '"', '\'', '`', '~', '(', '[', '{', '<', '\\', '|', '/', '@', '#', '$', '&', '_' };
+		for (unsigned i = 0; i < NOT_DEMANDING_SPACE && demanding; ++i)
+		{
+			if (symbol_code == not_demanding[i])
+				demanding = false;
+		}
+	}
+	return demanding;
+}
+
+unsigned signed_to_unsigned_char(int code)
+{
+	if (code < 0)
+	{
+		char signed_char = code;
+		code = (unsigned char)signed_char;
+	}
+	return code;
 }

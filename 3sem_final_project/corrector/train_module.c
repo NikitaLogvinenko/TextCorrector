@@ -7,11 +7,15 @@
 #include "files_working.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 
 // Обучить ИНИЦИАЛИЗИРОВАННЫЙ корректор, используя стартовый конфиг cfg. Возможно последовательное обучение на нескольких текстах
 // По окончании обучения сохранить модель (в случае успешного обучения) и очистить память, выделявшуюся под хеш-таблицы
-// В случае успешного обучения возвращает EXIT_SUCCESSFULLY, иначе EXIT_FILE_FAILURE (не открылся какой-то из файлов) или EXIT_USER_FAILURE (пользователь неправильно ввёл имя текста)
+// В случае успешного обучения вернёт EXIT_SUCCESSFULLY
+// Если не открылся какой-то из файлов - вернёт EXIT_FILE_FAILURE
+// Если пользователь что-то ввёл некорректно - вернёт EXIT_USER_FAILURE
+// EXIT_MEMORY_FAILURE не возвращается, т.к. если не удаётся выделить память под какое-либо слово, то об это сообщается в консоли, но это не критично, т.к. модель будет работать и без него
 static int train_initialized(Corrector* corrector, const Pointer* cfg);
 
 // Обучить ИНИЦИАЛИЗИРОВАННЫЙ корректор словам из файла text_file_name. По окончании обучения закрывает файл
@@ -19,6 +23,14 @@ static int train_initialized(Corrector* corrector, const Pointer* cfg);
 // Если text_file_name не является путём к файлу .txt - вернёт EXIT_USER_FAILURE
 // Если не открылся файл - вернёт EXIT_FILE_FAILURE
 static int train_one_file(Corrector* corrector, const char* text_file_name);
+
+// Считывает слово из файла в буфер. Слово предназначается для обучения модели
+// Пропускает пробельные и пунктуационные символы, пока не встретит первый непробельный и непунктуационный
+// Затем считывает до max_word_length символов включительно и в конце ставит '\0' (т.е. в буффере должно быть место минимум на max_word_length + 1 символов)
+// Считывание идёт, пока не считаем max_word_length символов или не встретится новый пробельный/пунктуационный символ/EOF
+// Если слово превысило max_word_length - его изучать не надо. Считываем все оставшиеся символы до нового пробельного, а буфер очищаем (ставим '\0' в начало)
+// Возвращает true, если конец файла ещё не достигнут, иначе возвращает false
+static bool read_train_word(FILE* text_file, char* buffer, unsigned max_word_length);
 
 /*=================================================================================================================================================================================*/
 
@@ -65,8 +77,13 @@ static int train_initialized(Corrector* corrector, const Pointer* cfg)
 		printf("Текст с русскими словами должен иметь кодировку ANSI. Для английских текстов допустима UTF-8\n");
 		printf("Введите полный или относительный путь к тексту для обучения в формате path\\file_name.txt: ");
 		char text_file_name[BUFFER_SIZE];
-		read_param_from_console(text_file_name, BUFFER_SIZE);
-		exit_code = train_one_file(corrector, text_file_name);
+		exit_code = read_param_from_console(text_file_name, BUFFER_SIZE);
+		if (exit_code == EXIT_SUCCESSFULLY)
+			exit_code = train_one_file(corrector, text_file_name);
+		else if (exit_code == EXIT_USER_FAILURE)
+			printf("Путь введён некорректно\n");
+		else if (exit_code == EXIT_MEMORY_FAILURE)
+			printf("Слишком длинный путь к файлу\n");
 	}
 	
 	if (exit_code != EXIT_SUCCESSFULLY)  // на каком-то этапе произошла ошибка, не сохраняем модель (если это новая модель - будет пустой файл, если старая, то файл не изменится)
@@ -116,4 +133,57 @@ static int train_one_file(Corrector* corrector, const char* text_file_name)
 	else  // файл не открылся
 		exit_code = EXIT_FILE_FAILURE;
 	return exit_code;
+}
+
+static bool read_train_word(FILE* text_file, char* buffer, unsigned max_word_length)
+{
+	// проверка, что файл открыт, выполнена ранее, в train_one_file, откуда и вызывается функция read_train_word
+	bool file_not_ended = true;
+	int new_symbol = fgetc(text_file);  // fgetc возвращает от 0 до 255, т.е. для unsigned char. В случае конца файла возвращает -1. А обычные char записываются от -128 до 127
+	while (new_symbol != EOF && (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0))  // функции из модуля <ctype.h> работают как раз с unsigned char
+		new_symbol = fgetc(text_file);  // пропускаем все пробельные символы и знаки препинания, пока не встретим букву или конец файла
+
+	if (new_symbol == EOF)  // дошли до конца файла и не встретили слово
+	{
+		buffer[0] = '\0';
+		file_not_ended = false;
+	}
+	else  // нашли слово
+	{
+		int counter = 0;
+		while (counter < max_word_length && new_symbol != EOF && isspace(new_symbol) == 0 && ispunct(new_symbol) == 0 || new_symbol == (int)'-')
+		{
+			// записываем новые символы в буфер, пока не превысим лимит или пока не встретим пробельный или пунктуационный символ или конец файла
+			buffer[0] = new_symbol;
+			++counter;
+			++buffer;
+			new_symbol = fgetc(text_file);
+		}
+
+		if (new_symbol == EOF)  // дошли до конца файла
+		{
+			file_not_ended = false;
+			buffer[0] = '\0';
+		}
+
+		else if (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0)  // целиком прочитали слово
+			buffer[0] = '\0';
+
+		else  // превышен лимит по буквам, зануляем всё слово и пропускаем оставшиеся символы до пробельного
+		{
+			*(buffer - max_word_length) = '\0';
+			while (isspace(new_symbol) == 0)
+			{
+				new_symbol = fgetc(text_file);
+				if (new_symbol == EOF)
+				{
+					file_not_ended = false;
+					new_symbol = (unsigned char)' ';
+				}
+
+			}
+		}
+	}
+
+	return file_not_ended;
 }

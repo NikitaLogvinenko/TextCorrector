@@ -17,16 +17,22 @@ int main(int argc, char** argv)
 	int exit_code = EXIT_SUCCESSFULLY;
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
-	Pointer* pp = empty_pointers_array(4);
-	const char* model_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
+	Pointer* pp = empty_pointers_array(6);
+	const char* model_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model_2.txt";
 	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\texts\\Иван Гончаров - Обломов.txt";
+	const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\editted_text.txt";
 	pp[1] = malloc(sizeof(char) * (strlen(model_name) + 1));
 	pp[2] = malloc(sizeof(char) * (strlen(text_name) + 1));
-	pp[3] = malloc(sizeof(int));
-	*(int*)pp[3] = 10;
+	pp[3] = malloc(sizeof(char) * (strlen(new_name) + 1));
+	pp[4] = malloc(sizeof(int));
+	pp[5] = malloc(sizeof(int));
+	*(int*)pp[4] = 2;
+	*(int*)pp[5] = 2;
 	strcpy(pp[1], model_name);
 	strcpy(pp[2], text_name);
-	exit_code = train_existed_model(pp);
+	strcpy(pp[3], new_name);
+	exit_code = edit_text(pp);
+	
 	
 	//const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
 	/*FILE* file = fopen(new_name, "w");

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 
 // Индикатор того, что новое слово вставилось в связный список
@@ -56,13 +57,16 @@ MList* mlist_add(MList* ml, const char* word, unsigned counter)
 {
     MList* new_head = ml;
     MList* existing_node = mlist_find(ml, word);
-    if (existing_node != NULL) // если слово уже есть - добавить к счётчику counter
+    if (existing_node != NULL) // если слово уже есть - добавить к счётчику counter (но так, чтобы не выйти за пределы unsigned)
     {
-        existing_node->counter += counter;
+        if (existing_node->counter < UINT_MAX - counter)
+            existing_node->counter += counter;
+        else
+            existing_node->counter = UINT_MAX;
         // Т.к. слова хранятся в динамической памяти, но у нас два участка памяти с одинаковым словом
         // Тогда участок с повторением нужно очистить, т.к. он больше нигде не используется
         // Слова добавляются только при обучении. Мы читаем слово, записываем в таблицу и больше нигде не используем слово отдельно. Если оно не попало в таблицу - оно не нужно
-        free(word);
+        free(word);  // очищаем память, т.к. храним другое такое же слово, а это не нужно
     }
     else  // если нет - добавляем новое слово в список
     {
