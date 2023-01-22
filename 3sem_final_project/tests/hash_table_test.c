@@ -1,5 +1,4 @@
 #include "constants.h"
-#include "hash_table.h"
 #include "hash_table_lib.h"
 #include "hash_table_test.h"
 #include "helpful_functions.h"

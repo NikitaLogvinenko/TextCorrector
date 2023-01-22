@@ -1,1 +1,0 @@
-trrrain_new "new_model.txt" "existed_files\text_for_learning.txt" 20

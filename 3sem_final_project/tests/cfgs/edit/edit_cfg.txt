@@ -1,1 +1,1 @@
-"edit"  "existed_files\existed_model.txt"  "existed_files\text_for_edit.txt"   "new_files\edited text.txt"  2  2
+"edit"  "existed_files\models\super_smart_model.txt"  "existed_files\wrong_text.txt"  "new_files\correct_text.txt"  2  2

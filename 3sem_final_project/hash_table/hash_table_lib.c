@@ -1,7 +1,5 @@
 #include "constants.h"
-#include "marked_list.h"
 #include "marked_list_lib.h"
-#include "hash_table.h"
 #include "hash_table_lib.h"
 #include "helpful_functions.h"
 #include <stdbool.h>
