@@ -29,40 +29,35 @@ static int edit_by_loaded(Corrector* corrector, const Pointer* cfg);
 // Т.к. память внутри выделяется только автоматически, то ошибки памяти быть не может
 static int edit_one_file(Corrector* corrector, const char* initial_file_name, const char* edited_file_name, const int size_tol, const int threshold);
 
-// Корректор corrector уже должен быть загружен, а параметры size_tol и threshold для редактирования заданы
-// Считывается одно слово из файла size_tol, для чего используется промежуточный буфер initial_buffer. Отредактированное слово помещается в edited_buffer
-// Размер буфера initial_buffer должен быть не менее corrector->max_word_length + size_tol + 2, а edited_buffer не менее corrector->max_word_length + 2
-// +1 на небуквенный символ после слова, который тоже выводится в файл, и +1 на хранение конца строки '\0'
-// Слово считывается из initial_file и записывается после редактирования в edited_file
-// Если слово было отредактировано, то к счётчику отредактированных слов words_edited_counter прибавляется 1
+// Корректор corrector уже должен быть загружен, а параметры size_tol и threshold для редактирования заданы.
 // Если после прочтения слова файл ещё не окончен, то вернёт true, иначе false
+// Считывается одно слово из файла initial_file, для чего используется буфер initial_buffer. Если надо, слово редактируется в edited_buffer. В конце концов оно выводится в edited_file.
+// Размер буферов должен быть не менее corrector->max_word_length + size_tol + 2:
+// +1 на возможный небуквенный символ после слова (если после слова не идёт EOF), который тоже выводится в файл после слова, и +1 на хранение конца строки '\0'.
+// Если слово было отредактировано, то к счётчику отредактированных слов words_edited_counter прибавляется 1.
 // ----------------------------------------------------------------------------
-// Сначала проверяется, надо ли поставить пробел после предыдущего ввода (см. пояснение в конце аннотации). Если надо - пробел выводится в edited_file.
-// Затем все небуквенные символы считываются и выводятся в edited_file без редактирования.
+// Сначала проверяется, надо ли поставить пробел после предыдущего ввода (см. об этом пояснение в конце аннотации). Если надо - пробел выводится в edited_file.
+// Затем ВСЕ небуквенные символы считываются и выводятся в edited_file без редактирования.
 // Если при встрече буквенного символа предыдущий был space_demanding() - см.эту функцию в words_handling - сначала ставится пробел. 
 // Далее осуществляется считывание слова до первого небуквенного символа (дефис ВНУТРИ cчитается буквенным).
 // Если прочитано corrector->max_word_length + size_tol символов и следующий символ буквенный или дефис, то слово слишком длинное и его не получится заменить словом из corrector. 
 // Тогда выводим все символы до первого непробельного включительно в edited_file без изменений.
-// Если слово не слишком длинное, то вызывается static функция try_edit, внутри которой происходит редактирование, если это нужно, и слово выводится в edited_file
-// Небуквенный символ после слова также хранится в буфере, выводится в файл в try_edit и записывается в нулевую позицию в initial_buffer. 
-// Если после слова идёт сразу EOF, то в буфере '\0' будет сразу после слова
-// Это необходимо из-за того что при чтении первого символа функция проверяет, если первый символ в initial_file БУКВЕННЫЙ, и первый символ в initial_buffer является space_demanding(), 
-// значит в исходном файле был пропущен пробел.В таком случае сначала ставится пробел и лишь затем идёт запись следующих символов из initial_file.
+// Если слово не слишком длинное, то вызывается функция corrector_edit, внутри которой происходит редактирование, если это нужно, и слово выводится в edited_file
+// Небуквенный символ после слова также хранится в буфере, выводится в файл в функции corrector_edit и записывается в нулевую позицию в initial_buffer. 
+// Если после слова идёт сразу EOF, то в буфере '\0' будет сразу после слова.
+// Это необходимо, т.к. при чтении первого символа функция проверяет, если первый символ в initial_file БУКВЕННЫЙ, и первый символ в initial_buffer является space_demanding(), 
+// значит в исходном файле был пропущен пробел. В таком случае сначала ставится пробел и лишь затем идёт запись следующих символов из initial_file.
 static bool edit_one_word(Corrector* corrector, unsigned size_tol, unsigned threshold,
 	FILE* initial_file, FILE* edited_file, char* initial_buffer, char* edited_buffer, unsigned* words_edited_counter);
-
-// Если symbol_code - буква, а prev_code - непробельный символ, требующий после себя пробел, то вывести в edited_file пробел и вернуть (int)' '
-// В противном случае ничего не выводить в файл и вернуть prev_code
-static int space_before(FILE* edited_file, int prev_code, int symbol_code);
 
 // Предполагается, что мы дошли при чтении текста до слова и symbol_code - первый буквенный символ, а перед ним был введён prev_code.
 // Если prev_code требует после себя пробел - выводим пробел в edited_file.
 // Далее записываем все буквенные символы и дефисы в initial_buffer, пока не встретим небуквенный символ и не дефис.
 // Если дошли при чтении до конца файла - остановится и вернёт true, иначе вернёт false.
-// Если дошли до небуквенного недефисного символа, но не EOF, то запишет этот символ после слова в буффер.
+// Если дошли до небуквенного недефисного символа, но не EOF, то записываем этот символ после слова в буффер.
 // Если превышено число символов max_letters_init в редактируемом слове, то выведет все символы до первого небуквенного и не дефиса, а в initial_buffer[0] запишет последний выведенный.
-// Если предел не превышен, то ничего не выводит в файл, а оставляет слово в буфере для дальнейшей обработки.
-static bool read_word(FILE* initial_file, FILE* edited_file, char* initial_buffer, int max_letters_initial, int symbol_code, int prev_code);
+// Если предел не превышен, то ничего не выводит в файл, а оставляет слово в буфере вместе с небуквенным символом после него для дальнейшей обработки.
+static bool read_word_to_edit(FILE* initial_file, FILE* edited_file, char* initial_buffer, int max_letters_initial, int symbol_code, int prev_code);
 
 
 /*=================================================================================================================================================================================*/
@@ -136,7 +131,7 @@ static int edit_one_file(Corrector* corrector, const char* initial_file_name, co
 	}
 	else  // пути введены неверно
 	{
-		printf("Путь не является путём к .txt файлу. Редактирование прервано\n");
+		printf("Путь %d не является путём к .txt файлу. Редактирование прервано\n", path_is_txt(initial_file) ? 2 : 1);
 		exit_code = EXIT_USER_FAILURE;
 	}
 
@@ -145,13 +140,13 @@ static int edit_one_file(Corrector* corrector, const char* initial_file_name, co
 		// файлы открылись, можем редактировать
 		bool file_not_ended = true;  // индикатор, что надо продолжать редактирование
 		unsigned words_edited = 0;  // счётчик отредактированных слов
-		char initial_buffer[MAX_AVAILABLE_WORD_LENGTH + MAX_AVAILABLE_MISSES + 2], edited_buffer[MAX_AVAILABLE_WORD_LENGTH + 2];
+		char initial_buffer[MAX_AVAILABLE_WORD_LENGTH + MAX_AVAILABLE_MISSES + 2], edited_buffer[MAX_AVAILABLE_WORD_LENGTH + MAX_AVAILABLE_MISSES + 2];
 		// +2, т.к. +1 на небуквенный недефисный символ после слова, который выводится после слова и его надо запомнить, и +1 на '\0'
 		initial_buffer[0] = ' ';  // так нужно, чтобы перел самым первым символом файла не стоял пробел
 		// Максимальная длина редактируемого слова может на max_size_tol превышать длину самого длинного изученного слова (если у нас просто MAX_AVAILABLE_MISSES букв лишние)
 		while (file_not_ended)
 			file_not_ended = edit_one_word(corrector, size_tol, threshold, initial_file, edited_file, initial_buffer, edited_buffer, &words_edited);
-		printf("Отредактировано %d слов\n", words_edited);
+		printf("\nОтредактировано слов: %d\n", words_edited);
 	}
 	else // один или оба файла не открылись
 	{
@@ -184,37 +179,19 @@ static bool edit_one_word(Corrector* corrector, unsigned size_tol, unsigned thre
 			file_not_ended = (symbol_code != EOF);  // проверка конца файла
 		}
 		if (file_not_ended)  // нашли слово в оставшемся файле, а не дошли до конца файла
-			file_not_ended = read_word(initial_file, edited_file, initial_buffer, max_letters_initial, symbol_code, prev_code);  // считываем слово в буфер
-
-		// try_edit - редактирование слова из буфера, не забыть обработать дефисы в конце слова и не забыть, что в конце записан небуквенный символ, если не встретили EOF, а также записать последний символ в initial_buffer[0]
-		// если в buffer[0] первый символ буквенный - в любом случае нужно редактирование, однако возможно был EOF, но это обработается дальше
-		// если первый символ не буквенный и file_not_ended=false, то мы превысили буфер, начали выводить символы и дошли до конца файла - ничего больше делать не надо
-		// если первый символ не буквенный и file_not_ended=true, то мы превысили буфер, начали выводить символы, дошли до первого небуквенного недефисного и его тоже вывели, тоже ничего делать не надо
-		// в любом случае вернётся нужный file_not_ended
-		// не забыть прибавлять счётчик counter в HashTable, а также счётчик отредактированных слов
+			file_not_ended = read_word_to_edit(initial_file, edited_file, initial_buffer, max_letters_initial, symbol_code, prev_code);  // считываем слово в буфер
+		
+		// Если первый символ - буква (дефиса перед словом также быть не может) => слово поместилось в буфер => его нужно обработать и вывести отдельно
 		if (is_letter(initial_buffer[0]))
 		{
-			int index = 0;
-			for (; index < max_letters_initial + 1 && initial_buffer[index] != '\0'; ++index)
-				fputc(initial_buffer[index], edited_file);
-			initial_buffer[0] = initial_buffer[index - 1];
+			prev_code = corrector_edit(corrector, initial_buffer, edited_buffer, edited_file, size_tol, threshold, words_edited_counter);  // редактируем и выводим слово в файл
+			initial_buffer[0] = prev_code;  // последний символ записываем в initial_buffer[0]
 		}
-
 	}
 	return file_not_ended;
 }
 
-static space_before(FILE* edited_file, int prev_code, int symbol_code)
-{
-	if (space_demanding(prev_code) && is_letter(symbol_code))  // ранее ввели символ, требующий после себя пробел, а новый символ - буквенный
-	{
-		fputc(' ', edited_file);
-		prev_code = ' ';
-	}
-	return prev_code;
-}
-
-static bool read_word(FILE* initial_file, FILE* edited_file, char* initial_buffer, int max_letters_initial, int symbol_code, int prev_code)
+static bool read_word_to_edit(FILE* initial_file, FILE* edited_file, char* initial_buffer, int max_letters_initial, int symbol_code, int prev_code)
 {
 	prev_code = space_before(edited_file, prev_code, symbol_code);  // ставим пробел перед словом, если надо
 	bool file_not_ended = true;
@@ -227,12 +204,11 @@ static bool read_word(FILE* initial_file, FILE* edited_file, char* initial_buffe
 		file_not_ended = (symbol_code != EOF);  // проверка конца файла
 	}
 	// Делаем проверку, почему вышли из цикла
-	initial_buffer[letter_index] = '\0';  // не забываем обозначить конец строки
+	initial_buffer[letter_index] = '\0';  // не забываем обозначить конец слова (букву мы записали, а вот символ, при котором произошёл выход из цикла - пока что нет (см. в конце))
 	if (file_not_ended && (is_letter(symbol_code) || symbol_code == '-')) // остановка цикла произошла из-за того, что считали максимум букв и следующий символ опять дефис или буква
 	{
-		// Если даже прочитали максимум символов, но следующий EOF или небуквенный недефисный, то редактирование возможно ("на тоненького")
 		fputs(initial_buffer, edited_file);  // выписали то, что было в буфере
-		while (file_not_ended && (is_letter(symbol_code) || symbol_code == '-'))  // выписываем все буквы и дефисы, пока не встретим другой символ или конец файла
+		while (file_not_ended && (is_letter(symbol_code) || symbol_code == '-'))  // выписываем все последующие буквы и дефисы, пока не встретим другой символ или конец файла
 		{
 			fputc(symbol_code, edited_file);  // выводим символ в файл (последний прочитанный в for цикле также не был записан в буфер и его надо вывести отдельно)
 			symbol_code = fgetc(initial_file);  // считываем новый символ
@@ -244,17 +220,18 @@ static bool read_word(FILE* initial_file, FILE* edited_file, char* initial_buffe
 			initial_buffer[0] = symbol_code;
 		}
 		// Внутри этой функции файл мог закончится до и после превышения лимита символов
-		// Если файл заканчивается до превышения лимита, то слово надо обрабатывать в try_edit, поэтому слово остаётся в буфере и первый символ - буквенный.
-		// Если же файл заканчивается при выводе символов после превышения, то больше ничего обрабатывать не надо, т.к. всё уже вывели
-		// Но в initial_buffer до сих пор хранится начало длинного слова. Чтобы его не редактировать в try_edit, поставим в нулевой позиции пробел.
+		// Если файл заканчивается до превышения лимита, то слово надо обрабатывать в corrector_edit, поэтому слово остаётся в буфере и первый символ - буквенный.
+		// Если же файл заканчивается при выводе символов после превышения, то больше ничего обрабатывать не надо, т.к. всё уже вывели в файл.
+		// Но в initial_buffer до сих пор хранится начало длинного слова. Чтобы его не редактировать в corrector_edit, поставим в нулевой позиции пробел.
 		else  // дошли до конца файла после превышения лимита символов и вывода всех лишних символов в файл
 			initial_buffer[0] = ' ';
 	}
-	else if (file_not_ended)  // если дошли до небуквенного недефисного символа раньше, то надо его записать в конец буфера
+	// Если даже прочитали максимум символов, но следующий EOF или небуквенный недефисный, то редактирование возможно ("на тоненького")
+	else if (file_not_ended)  // если дошли до небуквенного недефисного символа раньше превышения лимита символов, то надо его записать в конец буфера
 	{
 		initial_buffer[letter_index] = symbol_code;
 		initial_buffer[letter_index + 1] = '\0';
 	}
-	// если дошли до конца файла до превышения лимита, то слово всё же надо будет обработать в try_edit
+	// если дошли до конца файла до превышения лимита, то слово всё же надо будет обработать в corrector_edit
 	return file_not_ended;
 }

@@ -29,10 +29,10 @@ unsigned hamming_distance(const char* word1, const char* word2)
 	return distance;
 }
 
-int word_to_upper(const char* initial_word, char* editted_word)
+int word_to_upper(const char* initial_word, char* edited_word)
 {
 	int changes = 0;
-	if (initial_word == NULL || editted_word == NULL)
+	if (initial_word == NULL || edited_word == NULL)
 		changes = -1;
 	else
 	{
@@ -43,9 +43,9 @@ int word_to_upper(const char* initial_word, char* editted_word)
 			int uppered_symbol_code = letter_to_upper(initial_symbol_code);
 			if (uppered_symbol_code != initial_symbol_code)
 				++changes;
-			*editted_word = (char)uppered_symbol_code;
+			*edited_word = (char)uppered_symbol_code;
 			++initial_word;
-			++editted_word;
+			++edited_word;
 			if (uppered_symbol_code == 0)  // записываем до '\0' включительно
 				flag = false;
 		}
@@ -53,10 +53,10 @@ int word_to_upper(const char* initial_word, char* editted_word)
 	return changes;
 }
 
-int word_to_lower(const char* initial_word, char* editted_word)
+int word_to_lower(const char* initial_word, char* edited_word)
 {
 	int changes = 0;
-	if (initial_word == NULL || editted_word == NULL)
+	if (initial_word == NULL || edited_word == NULL)
 		changes = -1;
 	else
 	{
@@ -67,9 +67,9 @@ int word_to_lower(const char* initial_word, char* editted_word)
 			int lowered_symbol_code = letter_to_lower(initial_symbol_code);
 			if (lowered_symbol_code != initial_symbol_code)
 				++changes;
-			*editted_word = (char)lowered_symbol_code;
+			*edited_word = (char)lowered_symbol_code;
 			++initial_word;
-			++editted_word;
+			++edited_word;
 			if (lowered_symbol_code == 0)  // записываем до '\0' включительно
 				flag = false;
 		}
@@ -154,8 +154,9 @@ const char* prepare_train_word(const char* word)
 {
 	char* prepared_word = NULL;
 	int not_letters_and_hyphens = wrong_symbols_in_word(word), letters_and_hyphens = letters_and_hyphens_in_word(word);
-	if (word != NULL && not_letters_and_hyphens == 0 && letters_and_hyphens != 0)
+	if (word != NULL && not_letters_and_hyphens == 0 && letters_and_hyphens != 0 && has_double_hyphens(word) == false)
 	{
+		// В слове только буквы и дефисы, при этом не 0 штук и дефисы не идут подряд
 		prepared_word = (char*)retry_malloc(sizeof(char) * (letters_and_hyphens + 1), MAX_MALLOC_ATTEMPTS);
 		if (prepared_word != NULL)
 			word_to_lower(word, prepared_word);
@@ -193,6 +194,21 @@ int letters_and_hyphens_in_word(const char* word)
 	return counter;
 }
 
+int letters_in_word(const char* word)
+{
+	int counter = 0;
+	if (word != NULL)
+	{
+		while (*word != '\0')
+		{
+			if (is_letter(*word))
+				++counter;
+			++word;
+		}
+	}
+	return counter;
+}
+
 bool space_demanding(int symbol_code)
 {
 	bool demanding = true;
@@ -220,4 +236,78 @@ unsigned signed_to_unsigned_char(int code)
 		code = (unsigned char)signed_char;
 	}
 	return code;
+}
+
+int space_before(FILE* edited_file, int prev_code, int symbol_code)
+{
+	if (space_demanding(prev_code) && is_letter(symbol_code))  // ранее ввели символ, требующий после себя пробел, а новый символ - буквенный
+	{
+		fputc(' ', edited_file);
+		prev_code = ' ';
+	}
+	return prev_code;
+}
+
+int erase_punct_remainder(char* string_with_punct)
+{
+	int null_term_index = 0;
+	if (string_with_punct != NULL)
+	{
+		null_term_index = strlen(string_with_punct);
+		for (; null_term_index != 0 && ispunct(signed_to_unsigned_char(string_with_punct[null_term_index - 1])) != 0; --null_term_index)
+			string_with_punct[null_term_index - 1] = '\0';
+	}
+	return null_term_index;
+}
+
+int erase_not_letter_remainder(char* string_with_punct)
+{
+	int null_term_index = 0;
+	if (string_with_punct != NULL)
+	{
+		null_term_index = strlen(string_with_punct);
+		for (; null_term_index != 0 && is_letter(string_with_punct[null_term_index - 1]) == false; --null_term_index)
+			string_with_punct[null_term_index - 1] = '\0';
+	}
+	return null_term_index;
+}
+
+bool has_double_hyphens(const char* word)
+{
+	bool answer = false;
+	if (word != NULL && strlen(word) > 1)
+	{
+		char prev_symbol = word[0], current_symbol = word[1];
+		while (answer == false && current_symbol != '\0')
+		{
+			if (prev_symbol == '-' && current_symbol == '-')
+				answer = true;
+			else if (current_symbol == '-')
+			{
+				word += 1;
+				prev_symbol = word[0];
+				current_symbol = word[1];
+			}
+			else if (word[2] != '\0')
+			{
+				word += 2;
+				prev_symbol = word[0];
+				current_symbol = word[1];
+			}
+			else
+				current_symbol = '\0';
+		}
+	}
+	return answer;
+}
+
+int capital_counter(const char* word)
+{
+	int counter = 0;
+	if (word != NULL)
+	{
+		for (; *word != '\0'; ++word)
+			counter += is_upper_letter(*word);
+	}
+	return counter;
 }

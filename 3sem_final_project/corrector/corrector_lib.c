@@ -1,6 +1,5 @@
 #include "constants.h"
 #include "hash_table_lib.h"
-#include "CorrectorModel.h"
 #include "corrector_lib.h"
 #include "words_handling.h"
 #include "helpful_functions.h"
@@ -40,6 +39,20 @@ static int load_row(HashTable* ht, FILE* model_file, unsigned row_index, unsigne
 // Если произойдёт ошибка при выделении динамической памяти под слово или под узел связного списка - чистит все слова в строке, прочитанные ранее, и возвращает EXIT_MEMORY_FAILURE
 // Если не удаётся считать слово или его счётчик, если в слове не только буквы и дефисы, если слово неправильной длины или если слово имеет счётчик <0 - вернёт EXIT_USER_FAILURE
 static int load_words(MList** row, FILE* model_file, unsigned row_length, unsigned word_length, unsigned row_index, char* word_buffer, int* word_counter);
+
+// Получает слово, записанное в edited_buffer. Слово должно состоять только из МАЛЕНЬКИХ букв и дефисов ВНУТРИ слова.
+// С помощью корректора corrector проверяет существование слова и, если надо, пробует отредактировать с учётом size_tol и threshold.
+// Если слово отредактировано - возвращает true, иначе false.
+static bool try_edit(Corrector* corrector, unsigned size_tol, unsigned threshold, char* edited_buffer);
+
+// Пытается найти лучший вариант для редактирования слова из edited_buffer с помощью таблицы под индексом table_index, хранящейся в corrector.
+// Возвращает указатель на новый лучщий вариант (может быть, он останется старым).
+// Предполагается, что в функцию передаются индексы, удовлетворяющие size_tol. Остаётся только учесть threshold.
+// Функция принимает лучший вариант best_replace, найденный ранее. Ему соответствует отклонение *best_distance заменяющего слова от заменяемого.
+// Если в таблице есть вариант лучше, то меняется *best_distance и возвращается указатель на новый лучший вариант замены.
+// Вариант считается лучше, если у него меньше расстояние между заменяемым и заменяющим словом. Если расстояние одинаковое, то лучше вариант тот, который чаще встречался при обучении.
+// Если не найден вариант лучше - возвращает тот же самый best_replace. Если best_replace == NULL, то любой вариант, удовлетворяющий threshold, будет лучше.
+static MList* single_table_edit(Corrector* corrector, unsigned table_index, const char* edited_buffer, MList*  best_replace, unsigned* best_distance, unsigned threshold);
 
 
 int corrector_init(Corrector* corrector, unsigned max_word_length, WordsMetric metric_func)
@@ -168,6 +181,34 @@ int corrector_load(Corrector* corrector, const char* model_file_name)
 	return exit_code;
 }
 
+int corrector_edit(Corrector* corrector, const char* initial_buffer, char* edited_buffer, FILE* edited_file, unsigned size_tol, unsigned threshold, unsigned* words_edited_counter)
+{
+	int last_index = strlen(initial_buffer) - 1;  // индекс последнего символа в буфере
+	int last_symbol = initial_buffer[last_index];  // код последнего символа в буфере
+	if (letters_in_word(initial_buffer) == 1 || is_upper_letter(initial_buffer[0]) && capital_counter(initial_buffer) > 1)  // всего одна буква или используется сокращение/аббревиатура
+		fputs(initial_buffer, edited_file);
+	else  // слово, возможно, надо редактировать
+	{
+		word_to_lower(initial_buffer, edited_buffer);  // переносим слово в буфер для редактирования и переводим всё в нижний регистр
+		int remainder_start = erase_not_letter_remainder(edited_buffer);  // в редактируемом слове избавляемся от дефисов и небуквенного знака в конце; получаем индекс начала остатка
+		bool edited = try_edit(corrector, size_tol, threshold, edited_buffer);  // редактируем слово, если надо
+		if (edited || is_lower_letter(initial_buffer[0]) && capital_counter(initial_buffer) > 1)
+			*words_edited_counter += 1;  // если отредактировалось или заменили заглавные буквы на маленькие - увеличиваем счётчик
+		if (is_upper_letter(initial_buffer[0]))  // если первая буква была заглавной - надо и в отредактированном слове сделать её заглавной
+			edited_buffer[0] = letter_to_upper(edited_buffer[0]);
+		fputs(edited_buffer, edited_file);  // выписываем отредактированное слово
+		fputs(initial_buffer + remainder_start, edited_file);  // выписываем остаток из дефисов и, возможно, ещё одного символа; если таких нет - то просто выпишем "\0", т.е. ничего
+		if (initial_buffer[remainder_start] == '\0')
+		{
+			// Если это последнее слово в файле, то после него нет никаких небуквенных символов.
+			// Для приличия вернём последнюю букву отредактированного слова, которую мы вывели в файл, хоть это уже дальше и не понадобиться
+			int last_index_after_edit = strlen(edited_buffer) - 1;
+			last_symbol = edited_buffer[last_index_after_edit];
+		}
+	}
+	return last_symbol;
+}
+
 
 static int load_max_word_length(FILE* model_file, int* max_word_length)
 {
@@ -274,4 +315,64 @@ static int load_words(MList** row, FILE* model_file, unsigned row_length, unsign
 		}
 	}
 	return exit_code;
+}
+
+static bool try_edit(Corrector* corrector, unsigned size_tol, unsigned threshold, char* edited_buffer)
+{
+	bool edited = false, exists = false;
+	int initial_length = strlen(edited_buffer);
+	int min_length = max(2, initial_length - size_tol);  // минимально допустимая длина заменяющего слова
+	int max_length = min(corrector->max_word_length, initial_length + size_tol);  // максимально допустимая длина заменяющего слова
+	if (initial_length <= corrector->max_word_length)  // если слово не превышает максимальную длину изученных, то пытаемся его найти
+	{
+		HashTable* same_length_table = corrector->dictionary + initial_length - 1;  // таблица, в которой может быть наше слово (в одной таблице слова одной и той же длины)
+		exists = ht_has(same_length_table, edited_buffer);
+	}
+	if (exists == false)  // если слова не существует, то пробуем его отредактировать
+	{
+		MList* best_replace = NULL;
+		unsigned best_distance;  // чтобы не пересчитывать в каждой таблице
+		for (unsigned table_index = min_length - 1; table_index < max_length; ++table_index)
+			best_replace = single_table_edit(corrector, table_index, edited_buffer, best_replace, &best_distance, threshold);
+		if (best_replace != NULL)  // нашли вариант для замены
+		{
+			const char* best_word = best_replace->word;
+			char ask_assent[BUFFER_SIZE];
+			sprintf(ask_assent, "Заменить [%s] на [%s]?\n", edited_buffer, best_word);
+			bool user_assent = yes_no_question(ask_assent);
+			if (user_assent)
+			{
+				strcpy(edited_buffer, best_word);
+				edited = true;
+			}
+		}
+	}
+	return edited;
+}
+
+static MList* single_table_edit(Corrector* corrector, unsigned table_index, const char* edited_buffer, MList* best_replace, unsigned* best_distance, unsigned threshold)
+{
+	HashTable* ht = corrector->dictionary + table_index;  // слова длины table_index+1
+	int current_distance;
+	if (ht != NULL)  // если в модели есть слова такой длины (такая таблица)
+	{
+		for (unsigned row_index = 0; row_index < ht->size; ++row_index)  // ищем лучший вариант в каждой строке
+		{
+			MList* word_in_row = ht->table[row_index];
+			while (word_in_row != NULL)
+			{
+				current_distance = corrector->metric(edited_buffer, word_in_row->word);
+				if (current_distance <= threshold)
+				{
+					if ((best_replace == NULL) || (*best_distance > current_distance) || (*best_distance == current_distance && word_in_row->counter > best_replace->counter))
+					{
+						best_replace = word_in_row;
+						*best_distance = current_distance;
+					}
+				}
+				word_in_row = word_in_row->next;
+			}
+		}
+	}
+	return best_replace;
 }

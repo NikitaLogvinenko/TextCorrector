@@ -19,8 +19,8 @@ int main(int argc, char** argv)
 	SetConsoleOutputCP(1251);
 	Pointer* pp = empty_pointers_array(6);
 	const char* model_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model_2.txt";
-	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\texts\\Иван Гончаров - Обломов.txt";
-	const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\editted_text.txt";
+	const char* text_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\existed_files\\second_attempt.txt";
+	const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\second_attempt_new.txt";
 	pp[1] = malloc(sizeof(char) * (strlen(model_name) + 1));
 	pp[2] = malloc(sizeof(char) * (strlen(text_name) + 1));
 	pp[3] = malloc(sizeof(char) * (strlen(new_name) + 1));
@@ -32,7 +32,6 @@ int main(int argc, char** argv)
 	strcpy(pp[2], text_name);
 	strcpy(pp[3], new_name);
 	exit_code = edit_text(pp);
-	
 	
 	//const char* new_name = "B:\\Документы, изображения и тп\\Документы\\Никита\\Программирование\\Проекты Visual Studio 2022\\Структурное программирование, 3 семестр\\3sem_final_project\\3sem_final_project\\tests\\new_files\\new_model.txt";
 	/*FILE* file = fopen(new_name, "w");

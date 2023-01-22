@@ -24,12 +24,13 @@ static int train_initialized(Corrector* corrector, const Pointer* cfg);
 // Если не открылся файл - вернёт EXIT_FILE_FAILURE
 static int train_one_file(Corrector* corrector, const char* text_file_name);
 
-// Считывает слово из файла в буфер. Слово предназначается для обучения модели
-// Пропускает пробельные и пунктуационные символы, пока не встретит первый непробельный и непунктуационный
-// Затем считывает до max_word_length символов включительно и в конце ставит '\0' (т.е. в буффере должно быть место минимум на max_word_length + 1 символов)
-// Считывание идёт, пока не считаем max_word_length символов или не встретится новый пробельный/пунктуационный символ/EOF
-// Если слово превысило max_word_length - его изучать не надо. Считываем все оставшиеся символы до нового пробельного, а буфер очищаем (ставим '\0' в начало)
-// Возвращает true, если конец файла ещё не достигнут, иначе возвращает false
+// Считывает слово из файла в буфер. Слово предназначается для обучения модели.
+// Возвращает true, если конец файла ещё не достигнут, иначе возвращает false.
+// Пропускает пробельные и пунктуационные символы (в т.ч. дефис), пока не встретит первый непробельный и непунктуационный.
+// Затем считывает до max_word_length символов включительно и в конце ставит '\0' (т.е. в буффере должно быть место минимум на max_word_length + 1 символов).
+// Считывание идёт, пока не считаем max_word_length символов или не встретится новый пробельный/пунктуационный символ (кроме дефиса)/EOF. При этом дефисы допустимы.
+// Если слово превысило max_word_length - его изучать не надо. Считываем все оставшиеся символы до нового пробельного, а буфер очищаем (ставим '\0' в начало).
+// Т.о., все пробельные и пунктуационные знаки (в т.ч. дефис) в начале и в конце слова удаляются. Возможны непунктуационные символы в любой позиции, а также дефис внутри слова.
 static bool read_train_word(FILE* text_file, char* buffer, unsigned max_word_length);
 
 /*=================================================================================================================================================================================*/
@@ -121,8 +122,8 @@ static int train_one_file(Corrector* corrector, const char* text_file_name)
 		int memory_failures = 0;  // счётчик, сколько слов не смогли вставить
 		while (file_not_ended)
 		{
-			file_not_ended = read_train_word(text_file, buffer_for_word, corrector->max_word_length);
-			learning_word = prepare_train_word(buffer_for_word);
+			file_not_ended = read_train_word(text_file, buffer_for_word, corrector->max_word_length);  // считываем предполагаемое слово, отделённое пробельными и пунктуационными символами
+			learning_word = prepare_train_word(buffer_for_word);  // проверяем, что оно подходит для обучения; если подходит - выделяем под него память и возвращаем указатель
 			if (learning_word != NULL)  // слово подходит для изучения, запоминаем его, устанавливаем/обновляем счётчик
 				memory_failures += (corrector_learn(corrector, learning_word) == EXIT_MEMORY_FAILURE) ? 1 : 0;
 		}
@@ -140,50 +141,39 @@ static bool read_train_word(FILE* text_file, char* buffer, unsigned max_word_len
 	// проверка, что файл открыт, выполнена ранее, в train_one_file, откуда и вызывается функция read_train_word
 	bool file_not_ended = true;
 	int new_symbol = fgetc(text_file);  // fgetc возвращает от 0 до 255, т.е. для unsigned char. В случае конца файла возвращает -1. А обычные char записываются от -128 до 127
-	while (new_symbol != EOF && (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0))  // функции из модуля <ctype.h> работают как раз с unsigned char
-		new_symbol = fgetc(text_file);  // пропускаем все пробельные символы и знаки препинания, пока не встретим букву или конец файла
-
-	if (new_symbol == EOF)  // дошли до конца файла и не встретили слово
+	while (file_not_ended && (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0))  // функции из модуля <ctype.h> работают как раз с unsigned char
 	{
-		buffer[0] = '\0';
-		file_not_ended = false;
+		new_symbol = fgetc(text_file);  // пропускаем все пробельные символы и знаки препинания (в т.ч. дефисы), пока не встретим любой другой символ или конец файла
+		file_not_ended = (new_symbol != EOF);
 	}
-	else  // нашли слово
+	
+	if (file_not_ended == false)  // дошли до конца файла и не встретили слово
+		buffer[0] = '\0';  // нулевое слово
+
+	else  // нашли непробельный непунктуационный символ, начинаем записывать такие символы в буфер (после этого момента дефисы тоже записываются, до этого - нет)
 	{
-		int counter = 0;
-		while (counter < max_word_length && new_symbol != EOF && isspace(new_symbol) == 0 && ispunct(new_symbol) == 0 || new_symbol == (int)'-')
+		int counter = 0;  // счётчик записанных символов
+		for (; counter < max_word_length && file_not_ended && isspace(new_symbol) == 0 && (ispunct(new_symbol) == 0 || new_symbol == (int)'-'); ++counter)
 		{
-			// записываем новые символы в буфер, пока не превысим лимит или пока не встретим пробельный или пунктуационный символ или конец файла
-			buffer[0] = new_symbol;
-			++counter;
-			++buffer;
-			new_symbol = fgetc(text_file);
+			// Записываем новые символы в буфер, пока не превысим лимит по символам, пока не закончится файл или пока не встретим пробельный или пунктуационный символ (кроме дефиса)
+			buffer[counter] = new_symbol;  // записываем символ
+			new_symbol = fgetc(text_file);  // считываем новый символ
+			file_not_ended = (new_symbol != EOF);  // проверка на конец файла
 		}
-
-		if (new_symbol == EOF)  // дошли до конца файла
+		// Если дошли до конца файла, лимит не превышен (возможно counter = max_word_length, но это предельный допустимый случай) => ставим нуль-терминатор после слова
+		// Если целиком прочитали слово (до max_word_length символов включительно) и встретился пробельный или пунктуационный недефисный символ => ставим нуль-терминатор после слова
+		if (file_not_ended == false || isspace(new_symbol) != 0 || (ispunct(new_symbol) != 0 && new_symbol != (int)'-'))
+			buffer[counter] = '\0';  // завершили слово
+		else  // вышли из цикла, потому что прочитали max_word_length символов, а новый опять непунктуационный непробельный или дефис => слово ещё не закончилось => оно слишком длинное
 		{
-			file_not_ended = false;
-			buffer[0] = '\0';
-		}
-
-		else if (isspace(new_symbol) != 0 || ispunct(new_symbol) != 0)  // целиком прочитали слово
-			buffer[0] = '\0';
-
-		else  // превышен лимит по буквам, зануляем всё слово и пропускаем оставшиеся символы до пробельного
-		{
-			*(buffer - max_word_length) = '\0';
-			while (isspace(new_symbol) == 0)
+			buffer[0] = '\0';  // обнуляем прочитанное слово
+			while (isspace(new_symbol) == 0 && file_not_ended)  // пропускаем оставшиеся символы до пробельного или до конца файла, чтобы в следующий раз начать с нового слова
 			{
 				new_symbol = fgetc(text_file);
-				if (new_symbol == EOF)
-				{
-					file_not_ended = false;
-					new_symbol = (unsigned char)' ';
-				}
-
+				file_not_ended = (new_symbol != EOF);
 			}
 		}
+		erase_punct_remainder(buffer); // стираем дефисы в конце слова, если они есть
 	}
-
 	return file_not_ended;
 }

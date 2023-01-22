@@ -6,7 +6,7 @@
 
 
 typedef void* Pointer;
-typedef int (*WordsMetric)(const char*, const char*); // функция нахождения разности слов (метрика в пространстве слов)
+typedef unsigned (*WordsMetric)(const char*, const char*); // функция нахождения разности слов (метрика в пространстве слов)
 
 
 /*
