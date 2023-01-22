@@ -1,10 +1,10 @@
 #include "constants.h"
+#include "marked_list_lib.h"
 #include "hash_table_lib.h"
 #include "corrector_lib.h"
 #include "words_handling.h"
 #include "helpful_functions.h"
 #include "files_working.h"
-#include "marked_list_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>

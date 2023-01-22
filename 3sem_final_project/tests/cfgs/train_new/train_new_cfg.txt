@@ -1,1 +1,1 @@
-train_new "new_model.txt" "existed_files\text_for_learning.txt" 20
+train_new "existed_files\models\super_smart_model.txt" "existed_files\texts\rus\Лев Толстой - Война и мир.txt" 20
