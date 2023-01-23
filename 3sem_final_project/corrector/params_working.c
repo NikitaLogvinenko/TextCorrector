@@ -557,7 +557,7 @@ static Pointer ARV_size_tol(FILE* file_from, const char* path_to_cfg, Pointer* c
 	// приходится выделять буфер вне if'а, чтобы он сохранился и попал в ask_cfg_param
 	if (file_from == stdin)
 	{
-		sprintf(buffer, "\nМодель ищет лучшую замену из выученных слов длиной +-size_tol от заменяемого слова\nВведите size_tol (не менее 0, не более %d): ", MAX_AVAILABLE_MISSES);
+		sprintf(buffer, "\nМодель ищет лучшую замену из выученных слов длиной +-size_tol от заменяемого слова.\nВведите size_tol (не менее 0, не более %d): ", MAX_AVAILABLE_MISSES);
 		ask_msg = buffer;
 	}
 	int* size_tol = ask_cfg_param(file_from, path_to_cfg,
