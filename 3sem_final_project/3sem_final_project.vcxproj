@@ -105,7 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAs>CompileAsC</CompileAs>
-      <AdditionalIncludeDirectories>B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\corrector;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\marked_lists;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\hash_table;B:\Документы, изображения и тп\Документы\Никита\Программирование\Проекты Visual Studio 2022\Структурное программирование, 3 семестр\3sem_final_project\3sem_final_project\tests;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\3sem_final_project;$(SolutionDir)\3sem_final_project\corrector;$(SolutionDir)\3sem_final_project\marked_lists;$(SolutionDir)\3sem_final_project\hash_table;$(SolutionDir)\3sem_final_project\tests;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
